@@ -1,6 +1,10 @@
 matplotlib
 seaborn
-scikit-learn
-pandas
+scikit-learn~=1.5.2
+pandas~=2.2.3
 notebook
 xlrd
+numpy~=1.26.4
+keras~=3.6.0
+plotly~=5.24.1
+dash~=2.18.1
