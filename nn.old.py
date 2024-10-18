@@ -6,7 +6,6 @@ import pandas as pd
 from sklearn.decomposition import PCA
 from sklearn.manifold import MDS
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
-import numpy as np
 
 # Load the data
 df = pd.read_csv("data/polished3_with_gdp.csv")
@@ -38,15 +37,15 @@ def recalculate_coords(dataframe, attributes, method='MDS', medal_multiplier=2):
 
     # Apply MDS or PCA based on user's selection
     if method == 'MDS':
-        reducer = MDS(n_components=3, dissimilarity='euclidean', random_state=42)
+        reducer = MDS(n_components=2, dissimilarity='euclidean', random_state=42)
         coords = reducer.fit_transform(feature_data)
         stress = reducer.stress_  # Only for MDS
     elif method == 'PCA':
-        reducer = PCA(n_components=3)
+        reducer = PCA(n_components=2)
         coords = reducer.fit_transform(feature_data)
         stress = None  # PCA does not have a stress metric
 
-    return_df = pd.DataFrame(coords, columns=['x', 'y','z'], index=df_with_copies.index)
+    return_df = pd.DataFrame(coords, columns=['x', 'y'], index=df_with_copies.index)
     return pd.concat([df_with_copies, return_df], axis=1), stress
 
 # Get the unique list of events for the dropdown
@@ -113,15 +112,6 @@ app.layout = html.Div([
             style={'width': '100%', 'marginBottom': '20px'}
         ),
     ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
-    
-    html.Div([
-    dcc.Checklist(
-        id='view-selector',
-        options=[{'label': '3D View', 'value': '3D'}],
-        value=['2D'],  # Default is 3D view checked
-        labelStyle={'display': 'inline-block', 'marginRight': '10px'}
-    )
-], style={'width': '100%', 'textAlign': 'center', 'marginBottom': '20px'}),
 
     dcc.Graph(id='scatter-plot'),
 
@@ -136,50 +126,19 @@ app.layout = html.Div([
      Input('event-selector', 'value'),  # Event selection input
      Input('attribute-selector', 'value'),  # Feature selection input
      Input('medal-multiplier-input', 'value'),  # Medal multiplier input
-     Input('method-selector', 'value'),  # MDS or PCA selection
-     Input('view-selector', 'value')]  # 2D or 3D view selection
+     Input('method-selector', 'value')]  # MDS or PCA selection
 )
-def update_graph(selected_sport, selected_event, selected_attributes, medal_multiplier, selected_method, view_selector):
+def update_graph(selected_sport, selected_event, selected_attributes, medal_multiplier, selected_method):
     recalculated_coords, stress = recalculate_coords(df, selected_attributes, selected_method, medal_multiplier)
 
-    if '3D' in view_selector:
-        fig = px.scatter_3d(
-            recalculated_coords,
-            x='x',  # x coordinates
-            y='y',  # y coordinates
-            z='z',  # z coordinates for 3D plotting
-            hover_data=['Event', 'Sport'] + selected_attributes,
-            title="Dimensionality Reduction Plot (3D)"
-        )
+    fig = px.scatter(
+        recalculated_coords,
+        x='x',  # x coordinates
+        y='y',  # y coordinates
+        hover_data=['Event', 'Sport'] + selected_attributes,
+        title="Dimensionality Reduction Plot"
+    )
 
-        fig.update_layout(
-            scene=dict(
-                xaxis_title='X Coordinate',
-                yaxis_title='Y Coordinate',
-                zaxis_title='Z Coordinate'
-            ),
-            hovermode='closest',
-            title={'text': f"{selected_method} Plot of Bio By Sport Male (3D)", 'x': 0.5, 'xanchor': 'center'}
-        )
-
-    else:
-        # Plot 2D if '3D' is not in view_selector
-        fig = px.scatter(
-            recalculated_coords,
-            x='x',  # x coordinates
-            y='y',  # y coordinates
-            hover_data=['Event', 'Sport'] + selected_attributes,
-            title="Dimensionality Reduction Plot (2D)"
-        )
-
-        fig.update_layout(
-            xaxis_title='X Coordinate',
-            yaxis_title='Y Coordinate',
-            hovermode='closest',
-            title={'text': f"{selected_method} Plot of Bio By Sport Male (2D)", 'x': 0.5, 'xanchor': 'center'}
-        )
-
-    # Custom coloring and sizing for selected sport/event
     if selected_sport or selected_event:
         fig.update_traces(
             marker=dict(color=[
@@ -194,7 +153,13 @@ def update_graph(selected_sport, selected_event, selected_attributes, medal_mult
                 ])
         )
 
-    # Add hover template for custom display
+    fig.update_layout(
+        xaxis_title='X Coordinate',
+        yaxis_title='Y Coordinate',
+        hovermode='closest',
+        title={'text': f"{selected_method} Plot of Bio By Sport Male", 'x': 0.5, 'xanchor': 'center'}
+    )
+
     fig.update_traces(
         hovertemplate="<b>%{customdata[0]}</b><br>Sport: %{customdata[1]}<br>" +
                       "<br>".join([f"{attr}: %{{customdata[{i+2}]}}" for i, attr in enumerate(selected_attributes)])
