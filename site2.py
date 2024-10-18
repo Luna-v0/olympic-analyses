@@ -1,78 +1,107 @@
-# Import necessary libraries
-import pandas as pd
 import dash
-from dash import dcc
-from dash import html
-from dash.dependencies import Input, Output
-import plotly.express as px
-from scipy import stats
+from dash import dcc, html, Input, Output
+import pandas as pd
+import numpy as np
+import plotly.figure_factory as ff
+from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
+from scipy.stats import kurtosis
 
-COLUMNS = ["Height", "Age", "BMI"]
+df = pd.read_csv('data/polished3_with_gdp.csv')
 
-# Load the data from the csv file
-df = pd.read_csv('athlete_data.csv')
-df = df[COLUMNS]
+male = df[df["Sex"] == "M"]
+female = df[df["Sex"] == "F"]
+
+columns_to_normalize = ["Height", "BMI", "Age", "GDP"]
+
+used_columns = columns_to_normalize + ["Event"]
+
 scaler = StandardScaler()
-normalized_data = scaler.fit_transform(df)
-df = pd.DataFrame(normalized_data, columns=df.columns)
 
-# Create a Dash app
+male.loc[:, columns_to_normalize] = scaler.fit_transform(male[columns_to_normalize])
+female.loc[:, columns_to_normalize] = scaler.fit_transform(female[columns_to_normalize])
+
+df = pd.concat([male, female])[used_columns]
+
 app = dash.Dash(__name__)
 
-# Define the layout of the app
+# Dropdown options for events
+unique_events = df['Event'].unique()
+
 app.layout = html.Div([
-    html.H1('Olympic Athletes Dashboard', style={'textAlign': 'center'}),
-    html.P('Select one or more features to see their distributions:', style={'textAlign': 'center'}),
-    html.Div([
-        dcc.Dropdown(
-            id='feature-dropdown',
-            options=[{'label': feature, 'value': feature} for feature in df.columns],
-            value=[df.columns[0]],
-            multi=True
-        )
-    ], style={'width': '50%', 'margin': 'auto'}),
-    html.P('Note: You can select multiple features by holding the Ctrl key while clicking.',
-           style={'textAlign': 'center', 'fontSize': '12px', 'color': 'gray'}),
-    dcc.Graph(id='distribution-graph'),
-    html.Div(id='stats-output', style={'textAlign': 'center'})
-], style={'padding': '20px'})
+    # Event selector
+    dcc.Dropdown(
+        id='event-selector',
+        options=[{'label': event, 'value': event} for event in unique_events],
+        value=unique_events[0],  # Default selected event
+        clearable=False
+    ),
+
+    # PCA toggle
+    dcc.RadioItems(
+        id='pca-toggle',
+        options=[
+            {'label': 'Use PCA', 'value': 'pca'},
+            {'label': 'No PCA', 'value': 'no_pca'}
+        ],
+        value='no_pca',
+        labelStyle={'display': 'inline-block'}
+    ),
+
+    # Display kurtosis for both male and female
+    html.Div(dangerously_allow_html=True, id='kurtosis-output'),
+
+    # Display KDE plots
+    dcc.Graph(id='kde-plot')
+])
 
 
-# Define a callback function to update the graph
 @app.callback(
-    [Output('distribution-graph', 'figure'),
-     Output('stats-output', 'children')],
-    [Input('feature-dropdown', 'value')]
+    [Output('kurtosis-output', 'children'),
+     Output('kde-plot', 'figure')],
+    [Input('event-selector', 'value'),
+     Input('pca-toggle', 'value')]
 )
-def update_graph(selected_features):
-    # Melt the dataframe to create a single column for the values
-    data_to_plot = [df[feature] for feature in selected_features]
-
-    # Create a histogram figure using Plotly Express
-    melted_df = df[selected_features].melt(var_name='Feature', value_name='Value')
-
-    # Create a density plot using Plotly Express
-    fig = px.histogram(
-        melted_df,
-        x='Value',
-        color='Feature',
-        barmode='overlay',
-        histnorm='density',  # Normalize to show density
-        title='Distributions of Selected Features',
-        nbins=50
-    )
-    # Calculate the statistics
-    stats_output = []
-    for feature in selected_features:
-        mean = df[feature].mean()
-        std = df[feature].std()
-        kurtosis = stats.kurtosis(df[feature])
-        stats_output.append(html.P(f'{feature}: mean = {mean:.2f}, std = {std:.2f}, kurtosis = {kurtosis:.2f}'))
-
-    return fig, stats_output
+def update_dashboard(selected_event, pca_option):
+    # Filter data for the selected event
+    df_event = df[df['Event'] == selected_event][used_columns]
 
 
-# Run the app
+    # Apply PCA if selected
+    if pca_option == 'pca':
+        # Apply PCA
+        pca = PCA(n_components=1)
+        transformed = pca.fit_transform(df_event)
+
+        # Calculate kurtosis for the PCA-transformed data
+        kurt = kurtosis(transformed.squeeze())
+
+        # Use PCA-transformed data for KDE plots
+        kde_data = transformed.squeeze()
+        kde_labels = 'PCA'
+
+        # Display single kurtosis value for PCA
+        kurtosis_text = f"<b>Kurtosis for {selected_event} (PCA): {kurt:.2f}</b><br>"
+
+    else:
+        # Calculate kurtosis for each feature when PCA is not used
+        kurt = {col: kurtosis(df_event[col]) for col in columns_to_normalize}
+
+        # Use original normalized data for KDE plots
+        kde_data = [df_event[col] for col in columns_to_normalize]
+        kde_labels = [f'{col}' for col in columns_to_normalize]
+
+        # Display kurtosis for each feature
+        kurtosis_text = f"<b>Kurtosis for {selected_event}:</b><ul>"
+        for col in columns_to_normalize:
+            kurtosis_text += f"<li>{col}: {kurt[col]:.2f}</li>"
+        kurtosis_text += "</ul>"
+
+    # KDE plot
+    kde_fig = ff.create_distplot(kde_data, kde_labels, show_hist=False)
+
+    return kurtosis_text, kde_fig
+
+
 if __name__ == '__main__':
     app.run_server(debug=True)
