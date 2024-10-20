@@ -10,7 +10,7 @@ from scipy.stats import kurtosis, entropy
 #from app import app
 
 # Certifique-se de que este módulo está disponível corretamente
-from nn import adjust_medals
+from pergunta_3 import adjust_medals
 
 # Carregar o dataset
 df = pd.read_csv('data/polished3_with_gdp.csv')
