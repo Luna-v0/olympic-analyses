@@ -7,6 +7,8 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import MDS
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import numpy as np
+from site2 import create_page_site2
+from utils import adjust_medals
 
 # Load the data
 df = pd.read_csv("data/polished3_with_gdp.csv")
@@ -18,17 +20,6 @@ def process(dataframe):
     scaler = StandardScaler()
     grouped[ATTRIBUTES] = scaler.fit_transform(grouped[ATTRIBUTES])
     return grouped
-
-def adjust_medals(dataframe, medal_multiplier=2):
-    copies = dataframe[dataframe['Won Medal'] == True].copy()
-
-    # Use pd.concat to create n copies
-    for _ in range(medal_multiplier - 2):  # we already have 1 copy
-        copies = pd.concat([copies, dataframe[dataframe['Won Medal'] == True]])
-
-    # Concatenate original DataFrame with the new copies
-    df_with_copies = pd.concat([dataframe, copies], ignore_index=True)
-    return df_with_copies
 
 def recalculate_coords(dataframe, attributes, method='MDS', medal_multiplier=2):
     df_with_copies = adjust_medals(dataframe, medal_multiplier=medal_multiplier)
@@ -57,80 +48,81 @@ def recalculate_coords(dataframe, attributes, method='MDS', medal_multiplier=2):
 event_options = [{"label": event, "value": event} for event in df["Event"].unique()]
 sport_options = [{"label": sport, "value": sport} for sport in df["Sport"].unique()]
 
-app = dash.Dash(__name__)
+app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
 # Layout of the Dash app
-app.layout = html.Div([
-    html.H1("Sport Similarity", style={'textAlign': 'center', 'marginBottom': '30px'}),
+def create_page_1_layout():
+    return html.Div([
+                html.H1("Sport Similarity", style={'textAlign': 'center', 'marginBottom': '30px'}),
 
-    html.Div([
-        html.Label("Select a Sport:", style={'marginBottom': '5px'}),
-        dcc.Dropdown(
-            id='sport-selector',
-            options=sport_options,
-            placeholder="Select a Sport",
-            style={'width': '100%', 'marginBottom': '20px'}
-        ),
-    ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
+                html.Div([
+                    html.Label("Select a Sport:", style={'marginBottom': '5px'}),
+                    dcc.Dropdown(
+                        id='sport-selector',
+                        options=sport_options,
+                        placeholder="Select a Sport",
+                        style={'width': '100%', 'marginBottom': '20px'}
+                    ),
+                ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
 
-    html.Div([
-        html.Label("Select an Event:", style={'marginBottom': '5px'}),
-        dcc.Dropdown(
-            id='event-selector',
-            options=event_options,
-            placeholder="Select an Event",
-            style={'width': '100%', 'marginBottom': '20px'}
-        ),
-    ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
+                html.Div([
+                    html.Label("Select an Event:", style={'marginBottom': '5px'}),
+                    dcc.Dropdown(
+                        id='event-selector',
+                        options=event_options,
+                        placeholder="Select an Event",
+                        style={'width': '100%', 'marginBottom': '20px'}
+                    ),
+                ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
 
-    html.Div([
-        html.Label("Select Features:", style={'marginBottom': '5px'}),
-        dcc.Dropdown(
-            id='attribute-selector',
-            options=[{"label": attr, "value": attr} for attr in ATTRIBUTES],
-            multi=True,
-            value=ATTRIBUTES,  # Default to using all attributes
-            style={'width': '100%', 'marginBottom': '20px'}
-        ),
-    ], style={'width': '100%', 'padding': '0 10px'}),
+                html.Div([
+                    html.Label("Select Features:", style={'marginBottom': '5px'}),
+                    dcc.Dropdown(
+                        id='attribute-selector',
+                        options=[{"label": attr, "value": attr} for attr in ATTRIBUTES],
+                        multi=True,
+                        value=ATTRIBUTES,  # Default to using all attributes
+                        style={'width': '100%', 'marginBottom': '20px'}
+                    ),
+                ], style={'width': '100%', 'padding': '0 10px'}),
 
-    html.Div([
-        html.Label("Medal Multiplier:", style={'marginBottom': '5px'}),
-        dcc.Input(
-            id='medal-multiplier-input',
-            type='number',
-            value=2,
-            min=1,
-            step=1,
-            placeholder="Medal Multiplier",
-            style={'width': '100%', 'marginBottom': '20px'}
-        ),
-    ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
+                html.Div([
+                    html.Label("Medal Multiplier:", style={'marginBottom': '5px'}),
+                    dcc.Input(
+                        id='medal-multiplier-input',
+                        type='number',
+                        value=2,
+                        min=1,
+                        step=1,
+                        placeholder="Medal Multiplier",
+                        style={'width': '100%', 'marginBottom': '20px'}
+                    ),
+                ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
 
-    html.Div([
-        html.Label("Select Dimensionality Reduction Method:", style={'marginBottom': '5px'}),
-        dcc.Dropdown(
-            id='method-selector',
-            options=[{"label": "MDS", "value": "MDS"},
-                     {"label": "PCA", "value": "PCA"}],
-            value="MDS",  # Default method
-            style={'width': '100%', 'marginBottom': '20px'}
-        ),
-    ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
-    
-    html.Div([
-    dcc.Checklist(
-        id='view-selector',
-        options=[{'label': '3D View', 'value': '3D'}],
-        value=['2D'],  # Default is 3D view checked
-        labelStyle={'display': 'inline-block', 'marginRight': '10px'}
-    )
-], style={'width': '100%', 'textAlign': 'center', 'marginBottom': '20px'}),
+                html.Div([
+                    html.Label("Select Dimensionality Reduction Method:", style={'marginBottom': '5px'}),
+                    dcc.Dropdown(
+                        id='method-selector',
+                        options=[{"label": "MDS", "value": "MDS"},
+                                {"label": "PCA", "value": "PCA"}],
+                        value="MDS",  # Default method
+                        style={'width': '100%', 'marginBottom': '20px'}
+                    ),
+                ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
+                
+                html.Div([
+                dcc.Checklist(
+                    id='view-selector',
+                    options=[{'label': '3D View', 'value': '3D'}],
+                    value=['2D'],  # Default is 3D view checked
+                    labelStyle={'display': 'inline-block', 'marginRight': '10px'}
+                )
+            ], style={'width': '100%', 'textAlign': 'center', 'marginBottom': '20px'}),
 
-    dcc.Graph(id='scatter-plot'),
+                dcc.Graph(id='scatter-plot'),
 
-    html.Div(id='stress-metric', style={'textAlign': 'center', 'marginTop': '20px'})
-], style={'width': '80%', 'margin': '0 auto'})
+                html.Div(id='stress-metric', style={'textAlign': 'center', 'marginTop': '20px'})
+            ], style={'width': '80%', 'margin': '0 auto'})
 
 # Callback to update the graph
 @app.callback(
@@ -211,6 +203,23 @@ def update_graph(selected_sport, selected_event, selected_attributes, medal_mult
 
     return fig, stress_message
 
+
+app.layout = html.Div([
+    dcc.Location(id='url', refresh=False),
+    html.Div(id='page-content')
+])
+
+@app.callback(
+    Output('page-content', 'children'),
+    [Input('url', 'pathname')]
+)
+def display_page(pathname):
+    if pathname == '/page-1' or pathname == '/':
+        return create_page_1_layout()
+    elif pathname == '/page-2':
+        return create_page_site2(app)
+    else:
+        return html.H1("404: Page not found")
 
 # Run the app
 if __name__ == '__main__':
