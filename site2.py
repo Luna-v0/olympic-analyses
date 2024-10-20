@@ -30,12 +30,25 @@ df = pd.concat([male, female])
 # Initialize the app
 app = dash.Dash(__name__)
 
-# Unique events and features for dropdowns
+# Unique events and sports for dropdowns
 unique_events = df['Event'].unique()
+unique_sports = df['Sport'].unique()
 unique_features = columns_to_normalize
 
 app.layout = html.Div([
-    # Event selector (allow multiple selections)
+    # Filter by Event or Sport
+    dcc.RadioItems(
+        id='filter-type',
+        options=[
+            {'label': 'Event', 'value': 'Event'},
+            {'label': 'Sport', 'value': 'Sport'}
+        ],
+        value='Event',  # Default filter by Event
+        inline=True,
+        style={'marginBottom': '10px'}
+    ),
+
+    # Medal Multiplier input
     html.Div([
             html.Label("Medal Multiplier:", style={'marginBottom': '5px'}),
             dcc.Input(
@@ -49,9 +62,9 @@ app.layout = html.Div([
             ),
         ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
 
+    # Event or Sport selector (allow multiple selections)
     dcc.Dropdown(
-        id='event-selector',
-        options=[{'label': event, 'value': event} for event in unique_events],
+        id='event-sport-selector',
         value=[unique_events[0]],  # Default first event selected
         multi=True,
         clearable=False
@@ -70,7 +83,7 @@ app.layout = html.Div([
     dash_table.DataTable(
         id='stats-table',
         columns=[
-            {"name": "Event", "id": "event"},
+            {"name": "Event/Sport", "id": "event_sport"},
             {"name": "Kurtosis", "id": "kurtosis"},
             {"name": "Entropy", "id": "entropy"}
         ],
@@ -83,13 +96,28 @@ app.layout = html.Div([
 
 
 @app.callback(
+    [Output('event-sport-selector', 'options'),
+     Output('event-sport-selector', 'value')],
+    [Input('filter-type', 'value')]
+)
+def update_selector_options(filter_type):
+    if filter_type == 'Event':
+        options = [{'label': event, 'value': event} for event in unique_events]
+        return options, [unique_events[0]]  # Default first event selected
+    else:
+        options = [{'label': sport, 'value': sport} for sport in unique_sports]
+        return options, [unique_sports[0]]  # Default first sport selected
+
+
+@app.callback(
     [Output('stats-table', 'data'),
      Output('kde-plot', 'figure')],
-    [Input('event-selector', 'value'),
+    [Input('event-sport-selector', 'value'),
      Input('feature-selector', 'value'),
-     Input('medal-multiplier-input', 'value')]
+     Input('medal-multiplier-input', 'value'),
+     Input('filter-type', 'value')]
 )
-def update_dashboard(selected_events, selected_features, mm):
+def update_dashboard(selected_values, selected_features, mm, filter_type):
     adjusted_df = adjust_medals(df, mm)
 
     # Prepare the table data for kurtosis and entropy
@@ -99,15 +127,18 @@ def update_dashboard(selected_events, selected_features, mm):
     kde_data = []
     kde_labels = []
 
-    # Handle multiple events
-    if len(selected_events) > 1:
-        for event in selected_events:
-            # Filter data for the current event
-            df_event = adjusted_df[adjusted_df['Event'] == event][selected_features]
+    # Handle multiple events/sports
+    if len(selected_values) > 1:
+        for value in selected_values:
+            # Filter data based on the selected filter type
+            if filter_type == 'Event':
+                df_filtered = adjusted_df[adjusted_df['Event'] == value][selected_features]
+            else:
+                df_filtered = adjusted_df[adjusted_df['Sport'] == value][selected_features]
 
             # Apply PCA for dimensionality reduction
             pca = PCA(n_components=1)
-            transformed = pca.fit_transform(df_event)
+            transformed = pca.fit_transform(df_filtered)
 
             # Calculate kurtosis and entropy for PCA-transformed data
             kurt = kurtosis(transformed.squeeze())
@@ -115,32 +146,36 @@ def update_dashboard(selected_events, selected_features, mm):
 
             # Append stats to the table
             stats_data.append({
-                "event": event,
+                "event_sport": value,
                 "kurtosis": f"{kurt:.2f}",
                 "entropy": f"{ent:.2f}"
             })
 
             # Add data for KDE plot
             kde_data.append(transformed.squeeze())
-            kde_labels.append(f'{event} (PCA)')
+            kde_labels.append(f'{value} (PCA)')
 
-        # Create a combined KDE plot for all events
+        # Create a combined KDE plot for all events/sports
         kde_fig = ff.create_distplot(kde_data, kde_labels, show_hist=False)
 
     else:
-        # If only one event is selected, calculate kurtosis and entropy for each feature
-        df_event = df[df['Event'].isin(selected_events)][selected_features]
-        event = selected_events[0]
+        # If only one event/sport is selected, calculate kurtosis and entropy for each feature
+        if filter_type == 'Event':
+            df_filtered = adjusted_df[adjusted_df['Event'].isin(selected_values)][selected_features]
+        else:
+            df_filtered = adjusted_df[adjusted_df['Sport'].isin(selected_values)][selected_features]
+
+        value = selected_values[0]
 
         for feature in selected_features:
             # Calculate kurtosis and entropy for each feature
-            feature_data = df_event[feature]
+            feature_data = df_filtered[feature]
             kurt = kurtosis(feature_data)
             ent = entropy(np.histogram(feature_data, bins=10)[0])
 
             # Append stats to the table
             stats_data.append({
-                "event": f'{event} - {feature}',
+                "event_sport": f'{value} - {feature}',
                 "kurtosis": f"{kurt:.2f}",
                 "entropy": f"{ent:.2f}"
             })
