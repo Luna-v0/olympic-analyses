@@ -8,11 +8,13 @@ from sklearn.preprocessing import StandardScaler
 from scipy.stats import kurtosis, entropy
 from dash import dash_table
 
+from nn import adjust_medals
+
 # Load the dataset
 df = pd.read_csv('data/polished3_with_gdp.csv')
 
-# Columns to normalize
-columns_to_normalize = ["Height", "BMI", "Age", "GDP"]
+ATTRIBUTES = ["Height", "BMI", "Age", "GDP"]
+columns_to_normalize = ATTRIBUTES
 
 # Standardize the data
 scaler = StandardScaler()
@@ -34,6 +36,19 @@ unique_features = columns_to_normalize
 
 app.layout = html.Div([
     # Event selector (allow multiple selections)
+    html.Div([
+            html.Label("Medal Multiplier:", style={'marginBottom': '5px'}),
+            dcc.Input(
+                id='medal-multiplier-input',
+                type='number',
+                value=2,
+                min=1,
+                step=1,
+                placeholder="Medal Multiplier",
+                style={'width': '100%', 'marginBottom': '20px'}
+            ),
+        ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
+
     dcc.Dropdown(
         id='event-selector',
         options=[{'label': event, 'value': event} for event in unique_events],
@@ -71,9 +86,12 @@ app.layout = html.Div([
     [Output('stats-table', 'data'),
      Output('kde-plot', 'figure')],
     [Input('event-selector', 'value'),
-     Input('feature-selector', 'value')]
+     Input('feature-selector', 'value'),
+     Input('medal-multiplier-input', 'value')]
 )
-def update_dashboard(selected_events, selected_features):
+def update_dashboard(selected_events, selected_features, mm):
+    adjusted_df = adjust_medals(df, mm)
+
     # Prepare the table data for kurtosis and entropy
     stats_data = []
 
@@ -85,7 +103,7 @@ def update_dashboard(selected_events, selected_features):
     if len(selected_events) > 1:
         for event in selected_events:
             # Filter data for the current event
-            df_event = df[df['Event'] == event][selected_features]
+            df_event = adjusted_df[adjusted_df['Event'] == event][selected_features]
 
             # Apply PCA for dimensionality reduction
             pca = PCA(n_components=1)

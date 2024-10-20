@@ -19,7 +19,7 @@ def process(dataframe):
     grouped[ATTRIBUTES] = scaler.fit_transform(grouped[ATTRIBUTES])
     return grouped
 
-def recalculate_coords(dataframe, attributes, method='MDS', medal_multiplier=2):
+def adjust_medals(dataframe, medal_multiplier=2):
     copies = dataframe[dataframe['Won Medal'] == True].copy()
 
     # Use pd.concat to create n copies
@@ -28,6 +28,10 @@ def recalculate_coords(dataframe, attributes, method='MDS', medal_multiplier=2):
 
     # Concatenate original DataFrame with the new copies
     df_with_copies = pd.concat([dataframe, copies], ignore_index=True)
+    return df_with_copies
+
+def recalculate_coords(dataframe, attributes, method='MDS', medal_multiplier=2):
+    df_with_copies = adjust_medals(dataframe, medal_multiplier=medal_multiplier)
     df_with_copies = process(df_with_copies)
 
     # Ensure that only the selected attributes are used
