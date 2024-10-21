@@ -39,7 +39,7 @@ layout = html.Div([
             'cursor': 'pointer'
         })
     ], style={'textAlign': 'center'}),
-    
+
     # Menu Superior (colapsável)
     dbc.Collapse(
         id='menu-collapse',
@@ -54,7 +54,7 @@ layout = html.Div([
                     'color': '#333',
                     'marginTop': '20px'
                 }),
-                
+
                 # Linha 1: Filter Type, Gender Selector e Medal Multiplier
                 html.Div([
                     # Filter Type
@@ -71,7 +71,7 @@ layout = html.Div([
                             labelStyle={'marginRight': '15px', 'fontFamily': 'Arial, sans-serif', 'color': '#333'}
                         )
                     ], style={'display': 'flex', 'alignItems': 'center', 'marginRight': '30px'}),
-            
+
                     # Gender Selector
                     html.Div([
                         html.Label('Gênero:', style={'marginRight': '10px', 'fontWeight': 'bold'}),
@@ -86,7 +86,7 @@ layout = html.Div([
                             style={'width': '150px', 'fontFamily': 'Arial, sans-serif', 'color': '#333'}
                         )
                     ], style={'display': 'flex', 'alignItems': 'center', 'marginRight': '30px'}),
-            
+
                     # Medal Multiplier
                     html.Div([
                         html.Label("Medal Multiplier:", style={'marginRight': '10px', 'fontWeight': 'bold'}),
@@ -108,7 +108,7 @@ layout = html.Div([
                         )
                     ], style={'display': 'flex', 'alignItems': 'center'}),
                 ], style={'display': 'flex', 'justifyContent': 'center', 'marginBottom': '20px'}),
-            
+
                 # Linha 2: Event/Sport Selector e Feature Selector
                 html.Div([
                     # Event/Sport Selector
@@ -127,7 +127,7 @@ layout = html.Div([
                             }
                         )
                     ], style={'flex': '1', 'marginRight': '20px'}),
-            
+
                     # Feature Selector
                     html.Div([
                         html.Label('Selecione os Atributos:', style={'marginBottom': '5px', 'fontWeight': 'bold'}),
@@ -149,46 +149,14 @@ layout = html.Div([
             }),
         ]
     ),
-    
+
     # Divisão para o gráfico e a tabela de eventos mais próximos
     html.Div([
         # Gráfico KDE
         html.Div([
             dcc.Graph(id='kde-plot', style={'height': '500px'})
         ], style={'flex': '2', 'marginRight': '20px'}),
-    
-        # Tabela dos eventos mais próximos
-        html.Div([
-            html.H4(id='closest-events-title', style={
-                'textAlign': 'center',
-                'fontWeight': 'bold',
-                'fontFamily': 'Arial, sans-serif',
-                'color': '#333',
-                'marginBottom': '10px'
-            }),
-            dash_table.DataTable(
-                id='closest-events-table',
-                columns=[
-                    {"name": "", "id": "event_sport"},
-                    {"name": "Distância", "id": "distance"}
-                ],
-                data=[],
-                style_cell={
-                    'textAlign': 'left',
-                    'fontFamily': 'Arial, sans-serif',
-                    'color': '#333',
-                    'padding': '5px'
-                },
-                style_header={
-                    'backgroundColor': '#f1f1f1',
-                    'fontWeight': 'bold'
-                },
-                style_table={
-                    'marginTop': '10px',
-                    'overflowX': 'auto'
-                },
-            )
-        ], style={'flex': '1', 'maxWidth': '400px'}),
+
     ], style={
         'display': 'flex',
         'marginBottom': '20px',
@@ -197,7 +165,7 @@ layout = html.Div([
         'borderRadius': '10px',
         'alignItems': 'flex-start'
     }),
-    
+
     # Tabela para exibir kurtosis e entropia
     html.Div([
         dash_table.DataTable(
@@ -273,10 +241,7 @@ def register_callbacks(app):
     @app.callback(
         [Output('stats-table', 'data'),
         Output('kde-plot', 'figure'),
-        Output('closest-events-table', 'data'),
-        Output('stats-table', 'columns'),
-        Output('closest-events-table', 'columns'),
-        Output('closest-events-title', 'children')],
+        Output('stats-table', 'columns')],
         [Input('event-sport-selector', 'value'),
         Input('feature-selector', 'value'),
         Input('medal-multiplier-input', 'value'),
@@ -286,49 +251,38 @@ def register_callbacks(app):
     def update_dashboard(selected_values, selected_features, mm, filter_type, gender):
         if not selected_values:
             return [], {}, [], [], [], ''
-        
+
         df_gender = df[df['Sex'] == gender]
-        
+
         adjusted_df = adjust_medals(df_gender, mm)
-        
+
         # Verificar se o adjust_medals retornou dados
         if adjusted_df.empty:
             return [], {}, [], [], [], ''
-        
+
         # Normalizar os dados
         scaler = StandardScaler()
         adjusted_df[selected_features] = scaler.fit_transform(adjusted_df[selected_features])
-        
+
         # Dados para a tabela de estatísticas
         stats_data = []
-        
+
         # Dados para o gráfico KDE
         kde_data = []
         kde_labels = []
-        
-        # Dados para a tabela de eventos mais próximos
-        closest_table_data = []
-        
+
         # Atualizar colunas das tabelas dinamicamente
         if filter_type == 'Event':
             entity = 'Evento'
         else:
             entity = 'Esporte'
-        
+
         stats_columns = [
             {"name": entity, "id": "event_sport"},
             {"name": "Kurtosis", "id": "kurtosis"},
             {"name": "Entropia", "id": "entropy"}
         ]
-        
-        closest_columns = [
-            {"name": entity, "id": "event_sport"},
-            {"name": "Distância", "id": "distance"}
-        ]
-        
-        # Atualizar o título da tabela de eventos mais próximos
-        closest_title = f'{entity}s Mais Próximos'
-        
+
         # Se múltiplos eventos/esportes são selecionados
         if len(selected_values) > 1:
             for value in selected_values:
@@ -337,92 +291,80 @@ def register_callbacks(app):
                     df_filtered = adjusted_df[adjusted_df['Event'] == value][selected_features]
                 else:
                     df_filtered = adjusted_df[adjusted_df['Sport'] == value][selected_features]
-        
+
                 if df_filtered.empty:
                     continue
-        
+
                 # Aplicar PCA para redução de dimensionalidade
                 pca = PCA(n_components=1)
                 transformed = pca.fit_transform(df_filtered)
-        
+
                 # Calcular kurtosis e entropia
                 kurt = kurtosis(transformed.squeeze())
                 ent = entropy(np.histogram(transformed.squeeze(), bins=10)[0])
-        
+
                 # Adicionar dados à tabela
                 stats_data.append({
                     "event_sport": value,
                     "kurtosis": f"{kurt:.2f}",
                     "entropy": f"{ent:.2f}"
                 })
-        
+
                 # Dados para o gráfico KDE
                 kde_data.append(transformed.squeeze())
                 kde_labels.append(f'{value} (PCA)')
-        
+
             # Criar gráfico KDE combinado
             if kde_data:
                 kde_fig = ff.create_distplot(kde_data, kde_labels, show_hist=False)
             else:
                 kde_fig = {}
-        
+
         else:
             # Se apenas um evento/esporte é selecionado
             value = selected_values[0]
-        
+
             if filter_type == 'Event':
                 df_filtered = adjusted_df[adjusted_df['Event'] == value]
             else:
                 df_filtered = adjusted_df[adjusted_df['Sport'] == value]
-        
+
             if df_filtered.empty:
                 return [], {}, [], [], [], ''
-        
+
             # Calcular kurtosis e entropia para cada atributo
             for feature in selected_features:
                 feature_data = df_filtered[feature]
                 kurt = kurtosis(feature_data)
                 ent = entropy(np.histogram(feature_data, bins=10)[0])
-        
+
                 stats_data.append({
                     "event_sport": f'{value} - {feature}',
                     "kurtosis": f"{kurt:.2f}",
                     "entropy": f"{ent:.2f}"
                 })
-        
+
                 kde_data.append(feature_data)
                 kde_labels.append(feature)
-        
+
             # Criar gráfico KDE para cada atributo
             if kde_data:
                 kde_fig = ff.create_distplot(kde_data, kde_labels, show_hist=False)
             else:
                 kde_fig = {}
-        
+
             # Calcular distâncias para eventos/esportes próximos
             selected_mean = df_filtered[selected_features].mean().values.reshape(1, -1)
-        
+
             if filter_type == 'Event':
                 other_values = df_gender['Event'].unique()
                 group_df = df_gender.groupby('Event')
             else:
                 other_values = df_gender['Sport'].unique()
                 group_df = df_gender.groupby('Sport')
-        
-            distances = []
-            for other_value in other_values:
-                if other_value == value:
-                    continue
-                other_group = group_df.get_group(other_value)
-                other_mean = other_group[selected_features].mean().values.reshape(1, -1)
-                dist = np.linalg.norm(selected_mean - other_mean)
-                distances.append({"event_sport": other_value, "distance": f"{dist:.2f}"})
-        
-            # Ordenar e selecionar os mais próximos
-            distances.sort(key=lambda x: float(x['distance']))
-            closest_table_data = distances[:5]  # Top 5 mais próximos
-        
-        return stats_data, kde_fig, closest_table_data, stats_columns, closest_columns, closest_title
+
+
+        return stats_data, kde_fig, stats_columns
 
 #if __name__ == '__main__':
     #app.run_server(debug=True)
