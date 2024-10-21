@@ -1,4 +1,5 @@
 import dash
+import dash_bootstrap_components as dbc
 from dash import dcc, html
 from dash.dependencies import Input, Output
 import plotly.express as px
@@ -55,84 +56,109 @@ sport_options = [{"label": sport, "value": sport} for sport in df["Sport"].uniqu
 #app = dash.Dash(__name__)
 
 layout = html.Div([
-    html.H1("Sport Similarity", style={'textAlign': 'center', 'marginBottom': '30px'}),
-
-    # Linha 1: Select a Gender e Select a Sport
+    # Botão para mostrar/ocultar o menu
     html.Div([
-        html.Div([
-            html.Label("Select Gender:", style={'marginBottom': '5px'}),
-            dcc.Dropdown(
-                id='gender-selector',
-                options=[{'label': 'Male', 'value': 'M'}, {'label': 'Female', 'value': 'F'}],
-                value='M',
-                style={'width': '100%', 'marginBottom': '20px'}
-            ),
-        ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
+        dbc.Button('Mostrar/Ocultar Menu', id='toggle-menu-button', n_clicks=0, color='primary', style={
+            'margin': '10px',
+            'padding': '10px 20px',
+            'fontSize': '16px',
+            'fontFamily': 'Arial, sans-serif',
+            'borderRadius': '5px',
+            'cursor': 'pointer'
+        })
+    ], style={'textAlign': 'center'}),
+    
+    # Menu Superior (colapsável)
+    dbc.Collapse(
+        id='menu-collapse',
+        is_open=True,
+        children=[
+            html.Div([
+                # Título do Dashboard
+                html.H1("Sport Similarity", style={
+                'textAlign': 'center',
+                'marginBottom': '20px',
+                'fontFamily': 'Arial, sans-serif',
+                'color': '#333',
+                'marginTop': '20px'
+            }),
 
-        html.Div([
-            html.Label("Select a Sport:", style={'marginBottom': '5px'}),
-            dcc.Dropdown(
-                id='sport-selector',
-                options=sport_options,
-                placeholder="Select a Sport",
-                style={'width': '100%', 'marginBottom': '20px'}
-            ),
-        ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
-    ], style={'textAlign': 'center', 'marginBottom': '20px'}),
+            # Linha 1: Select a Gender e Select a Sport
+            html.Div([
+                html.Div([
+                    html.Label("Select Gender:", style={'marginBottom': '5px'}),
+                    dcc.Dropdown(
+                        id='gender-selector',
+                        options=[{'label': 'Male', 'value': 'M'}, {'label': 'Female', 'value': 'F'}],
+                        value='M',
+                        style={'width': '100%', 'marginBottom': '20px'}
+                    ),
+                ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
 
-    # Linha 2: Select an Event e Select Features
-    html.Div([
-        html.Div([
-            html.Label("Select an Event:", style={'marginBottom': '5px'}),
-            dcc.Dropdown(
-                id='event-selector',
-                options=event_options,
-                placeholder="Select an Event",
-                style={'width': '100%', 'marginBottom': '20px'}
-            ),
-        ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
+                html.Div([
+                    html.Label("Select a Sport:", style={'marginBottom': '5px'}),
+                    dcc.Dropdown(
+                        id='sport-selector',
+                        options=sport_options,
+                        placeholder="Select a Sport",
+                        style={'width': '100%', 'marginBottom': '20px'}
+                    ),
+                ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
+            ], style={'textAlign': 'center', 'marginBottom': '20px'}),
 
-        html.Div([
-            html.Label("Select Features:", style={'marginBottom': '5px'}),
-            dcc.Dropdown(
-                id='attribute-selector',
-                options=[{"label": attr, "value": attr} for attr in ATTRIBUTES],
-                multi=True,
-                value=ATTRIBUTES,
-                style={'width': '100%', 'marginBottom': '20px'}
-            ),
-        ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
-    ], style={'textAlign': 'center', 'marginBottom': '20px'}),
+            # Linha 2: Select an Event e Select Features
+            html.Div([
+                html.Div([
+                    html.Label("Select an Event:", style={'marginBottom': '5px'}),
+                    dcc.Dropdown(
+                        id='event-selector',
+                        options=event_options,
+                        placeholder="Select an Event",
+                        style={'width': '100%', 'marginBottom': '20px'}
+                    ),
+                ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
 
-    # Linha 3: Medal Multiplier e Select Dimensionality Reduction Method
-    html.Div([
-        html.Div([
-            html.Label("Medal Multiplier:", style={'marginBottom': '5px'}),
-            dcc.Input(
-                id='medal-multiplier-input',
-                type='number',
-                value=2,
-                min=1,
-                step=1,
-                placeholder="Medal Multiplier",
-                style={'width': '100%', 'marginBottom': '20px'}
-            ),
-        ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
+                html.Div([
+                    html.Label("Select Features:", style={'marginBottom': '5px'}),
+                    dcc.Dropdown(
+                        id='attribute-selector',
+                        options=[{"label": attr, "value": attr} for attr in ATTRIBUTES],
+                        multi=True,
+                        value=ATTRIBUTES,
+                        style={'width': '100%', 'marginBottom': '20px'}
+                    ),
+                ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
+            ], style={'textAlign': 'center', 'marginBottom': '20px'}),
 
-        html.Div([
-            html.Label("Select Dimensionality Reduction Method:", style={'marginBottom': '5px'}),
-            dcc.Dropdown(
-                id='method-selector',
-                options=[{"label": "MDS", "value": "MDS"},
-                         {"label": "PCA", "value": "PCA"}],
-                value="MDS",
-                style={'width': '100%', 'marginBottom': '20px'}
-            ),
-        ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
-    ], style={'textAlign': 'center', 'marginBottom': '20px'}),
+            # Linha 3: Medal Multiplier e Select Dimensionality Reduction Method
+            html.Div([
+                html.Div([
+                    html.Label("Medal Multiplier:", style={'marginBottom': '5px'}),
+                    dcc.Input(
+                        id='medal-multiplier-input',
+                        type='number',
+                        value=2,
+                        min=1,
+                        step=1,
+                        placeholder="Medal Multiplier",
+                        style={'width': '100%', 'marginBottom': '20px'}
+                    ),
+                ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
 
-    # View Selector - Centralizado
-    html.Div([
+                html.Div([
+                    html.Label("Select Dimensionality Reduction Method:", style={'marginBottom': '5px'}),
+                    dcc.Dropdown(
+                        id='method-selector',
+                        options=[{"label": "MDS", "value": "MDS"},
+                                {"label": "PCA", "value": "PCA"}],
+                        value="MDS",
+                        style={'width': '100%', 'marginBottom': '20px'}
+                    ),
+                ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
+            ], style={'textAlign': 'center', 'marginBottom': '20px'}),
+
+            # View Selector - Centralizado
+            html.Div([
         dcc.Checklist(
             id='view-selector',
             options=[{'label': '3D View', 'value': '3D'}],
@@ -141,11 +167,21 @@ layout = html.Div([
         )
     ], style={'width': '48%', 'margin': '0 auto', 'marginBottom': '20px', 'textAlign': 'center'}),
 
+], style={
+                'padding': '20px',
+                'backgroundColor': '#f0f0f0',
+                'borderRadius': '10px',
+                'marginBottom': '20px'
+            }),
+        ]
+    ),
+
     # Scatter Plot
     dcc.Graph(id='scatter-plot'),
 
     # Stress Metric
     html.Div(id='stress-metric', style={'textAlign': 'center', 'marginTop': '20px'})
+    
 ], style={'width': '80%', 'margin': '0 auto'})
 
 
