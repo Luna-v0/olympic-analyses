@@ -182,7 +182,12 @@ layout = html.Div([
     # Stress Metric
     html.Div(id='stress-metric', style={'textAlign': 'center', 'marginTop': '20px'})
     
-], style={'width': '80%', 'margin': '0 auto'})
+], style={
+    'maxWidth': '1200px',
+    'margin': '0 auto',
+    'backgroundColor': '#e5e5e5',
+    'padding': '0 20px'
+})
 
 
 def register_callbacks(app):
