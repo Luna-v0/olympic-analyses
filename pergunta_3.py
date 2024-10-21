@@ -10,8 +10,10 @@ import numpy as np
 
 # Load the data
 df = pd.read_csv("data/polished3_with_gdp.csv")
-df = df[df["Sex"] == "M"]
 ATTRIBUTES = ["Height", "BMI", "Age", "GDP"]
+
+# Add gender options for the dropdown
+gender_options = [{"label": "Male", "value": "M"}, {"label": "Female", "value": "F"}]
 
 def process(dataframe):
     grouped = dataframe.groupby(['Event', 'Sport'])[ATTRIBUTES].mean().reset_index()
@@ -21,47 +23,49 @@ def process(dataframe):
 
 def adjust_medals(dataframe, medal_multiplier=2):
     copies = dataframe[dataframe['Won Medal'] == True].copy()
-
-    # Use pd.concat to create n copies
-    for _ in range(medal_multiplier - 2):  # we already have 1 copy
+    for _ in range(medal_multiplier - 2):
         copies = pd.concat([copies, dataframe[dataframe['Won Medal'] == True]])
-
-    # Concatenate original DataFrame with the new copies
     df_with_copies = pd.concat([dataframe, copies], ignore_index=True)
     return df_with_copies
 
 def recalculate_coords(dataframe, attributes, method='MDS', medal_multiplier=2):
     df_with_copies = adjust_medals(dataframe, medal_multiplier=medal_multiplier)
     df_with_copies = process(df_with_copies)
-
-    # Ensure that only the selected attributes are used
     scaler = MinMaxScaler()
     feature_data = df_with_copies[attributes].reset_index(drop=True)
     scaled_feature_data = scaler.fit_transform(feature_data)
     feature_data = pd.DataFrame(scaled_feature_data, columns=feature_data.columns)
 
-    # Apply MDS or PCA based on user's selection
     if method == 'MDS':
         reducer = MDS(n_components=3, dissimilarity='euclidean', random_state=42)
         coords = reducer.fit_transform(feature_data)
-        stress = reducer.stress_  # Only for MDS
+        stress = reducer.stress_
     elif method == 'PCA':
         reducer = PCA(n_components=3)
         coords = reducer.fit_transform(feature_data)
-        stress = None  # PCA does not have a stress metric
+        stress = None
 
-    return_df = pd.DataFrame(coords, columns=['x', 'y','z'], index=df_with_copies.index)
+    return_df = pd.DataFrame(coords, columns=['x', 'y', 'z'], index=df_with_copies.index)
     return pd.concat([df_with_copies, return_df], axis=1), stress
 
-# Get the unique list of events for the dropdown
+# Get the unique list of events and sports for the dropdowns
 event_options = [{"label": event, "value": event} for event in df["Event"].unique()]
 sport_options = [{"label": sport, "value": sport} for sport in df["Sport"].unique()]
 
 #app = dash.Dash(__name__)
 
-print("Loading pergunta_3 layout...")
 layout = html.Div([
     html.H1("Sport Similarity", style={'textAlign': 'center', 'marginBottom': '30px'}),
+
+    html.Div([
+        html.Label("Select Gender:", style={'marginBottom': '5px'}),
+        dcc.Dropdown(
+            id='gender-selector',
+            options=gender_options,
+            value="M",  # Default to Male
+            style={'width': '100%', 'marginBottom': '20px'}
+        ),
+    ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
 
     html.Div([
         html.Label("Select a Sport:", style={'marginBottom': '5px'}),
@@ -117,15 +121,15 @@ layout = html.Div([
             style={'width': '100%', 'marginBottom': '20px'}
         ),
     ], style={'width': '48%', 'display': 'inline-block', 'padding': '0 10px'}),
-    
+
     html.Div([
-    dcc.Checklist(
-        id='view-selector',
-        options=[{'label': '3D View', 'value': '3D'}],
-        value=['2D'],  # Default is 3D view checked
-        labelStyle={'display': 'inline-block', 'marginRight': '10px'}
-    )
-], style={'width': '100%', 'textAlign': 'center', 'marginBottom': '20px'}),
+        dcc.Checklist(
+            id='view-selector',
+            options=[{'label': '3D View', 'value': '3D'}],
+            value=['2D'],  # Default is 2D view checked
+            labelStyle={'display': 'inline-block', 'marginRight': '10px'}
+        )
+    ], style={'width': '100%', 'textAlign': 'center', 'marginBottom': '20px'}),
 
     dcc.Graph(id='scatter-plot'),
 
@@ -133,87 +137,75 @@ layout = html.Div([
 ], style={'width': '80%', 'margin': '0 auto'})
 
 def register_callbacks(app):
-    # Callback to update the graph
     @app.callback(
-        [Output('scatter-plot', 'figure'),
-        Output('stress-metric', 'children')],
-        [Input('sport-selector', 'value'),  # Sport selection input
-        Input('event-selector', 'value'),  # Event selection input
-        Input('attribute-selector', 'value'),  # Feature selection input
-        Input('medal-multiplier-input', 'value'),  # Medal multiplier input
-        Input('method-selector', 'value'),  # MDS or PCA selection
-        Input('view-selector', 'value')]  # 2D or 3D view selection
+        [Output('event-selector', 'options'),  # Dynamic event options based on gender
+         Output('scatter-plot', 'figure'),
+         Output('stress-metric', 'children')],
+        [Input('gender-selector', 'value'),  # Gender selection input
+         Input('sport-selector', 'value'),  # Sport selection input
+         Input('event-selector', 'value'),  # Event selection input
+         Input('attribute-selector', 'value'),  # Feature selection input
+         Input('medal-multiplier-input', 'value'),  # Medal multiplier input
+         Input('method-selector', 'value'),  # MDS or PCA selection
+         Input('view-selector', 'value')]  # 2D or 3D view selection
     )
-    def update_graph(selected_sport, selected_event, selected_attributes, medal_multiplier, selected_method, view_selector):
-        recalculated_coords, stress = recalculate_coords(df, selected_attributes, selected_method, medal_multiplier)
+    def update_graph(selected_gender, selected_sport, selected_event, selected_attributes, medal_multiplier,
+                     selected_method, view_selector):
+        # Filter the events based on selected gender
+        filtered_df = df[df["Sex"] == selected_gender]  # Filter by selected gender
+
+        # Generate the event options based on the filtered dataframe
+        event_options = [{"label": event, "value": event} for event in filtered_df["Event"].unique()]
+
+        # Recalculate coordinates based on the filtered dataframe
+        recalculated_coords, stress = recalculate_coords(filtered_df, selected_attributes, selected_method,
+                                                         medal_multiplier)
 
         if '3D' in view_selector:
             fig = px.scatter_3d(
                 recalculated_coords,
-                x='x',  # x coordinates
-                y='y',  # y coordinates
-                z='z',  # z coordinates for 3D plotting
+                x='x',
+                y='y',
+                z='z',
                 hover_data=['Event', 'Sport'] + selected_attributes,
                 title="Dimensionality Reduction Plot (3D)"
             )
-
             fig.update_layout(
-                scene=dict(
-                    xaxis_title='X Coordinate',
-                    yaxis_title='Y Coordinate',
-                    zaxis_title='Z Coordinate'
-                ),
+                scene=dict(xaxis_title='X Coordinate', yaxis_title='Y Coordinate', zaxis_title='Z Coordinate'),
                 hovermode='closest',
-                title={'text': f"{selected_method} Plot of Bio By Sport Male (3D)", 'x': 0.5, 'xanchor': 'center'}
-            )
-
+                title={'text': f"{selected_method} Plot of Bio By Sport {selected_gender} (3D)", 'x': 0.5,
+                       'xanchor': 'center'})
         else:
-            # Plot 2D if '3D' is not in view_selector
             fig = px.scatter(
                 recalculated_coords,
-                x='x',  # x coordinates
-                y='y',  # y coordinates
+                x='x',
+                y='y',
                 hover_data=['Event', 'Sport'] + selected_attributes,
                 title="Dimensionality Reduction Plot (2D)"
             )
+            fig.update_layout(xaxis_title='X Coordinate', yaxis_title='Y Coordinate', hovermode='closest',
+                              title={'text': f"{selected_method} Plot of Bio By Sport {selected_gender} (2D)", 'x': 0.5,
+                                     'xanchor': 'center'})
 
-            fig.update_layout(
-                xaxis_title='X Coordinate',
-                yaxis_title='Y Coordinate',
-                hovermode='closest',
-                title={'text': f"{selected_method} Plot of Bio By Sport Male (2D)", 'x': 0.5, 'xanchor': 'center'}
-            )
-
-        # Custom coloring and sizing for selected sport/event
         if selected_sport or selected_event:
             fig.update_traces(
-                marker=dict(color=[
-                    "green" if sport == selected_sport else (
-                        "red" if event == selected_event else "blue")
-                    for sport, event in zip(recalculated_coords["Sport"], recalculated_coords["Event"])
-                ],
-                    size=[
-                        14 if sport == selected_sport else (
-                            12 if event == selected_event else 8)
-                        for sport, event in zip(recalculated_coords["Sport"], recalculated_coords["Event"])
-                    ])
+                marker=dict(
+                    color=["green" if sport == selected_sport else ("red" if event == selected_event else "blue")
+                           for sport, event in zip(recalculated_coords["Sport"], recalculated_coords["Event"])],
+                    size=[14 if sport == selected_sport else (12 if event == selected_event else 8)
+                          for sport, event in zip(recalculated_coords["Sport"], recalculated_coords["Event"])])
             )
 
-        # Add hover template for custom display
         fig.update_traces(
             hovertemplate="<b>%{customdata[0]}</b><br>Sport: %{customdata[1]}<br>" +
-                        "<br>".join([f"{attr}: %{{customdata[{i+2}]}}" for i, attr in enumerate(selected_attributes)])
+                          "<br>".join(
+                              [f"{attr}: %{{customdata[{i + 2}]}}" for i, attr in enumerate(selected_attributes)])
         )
 
-        if selected_method == 'MDS':
-            stress_message = f"Stress value for MDS: {stress:.4f}"
-        else:
-            stress_message = "PCA does not calculate stress."
+        stress_message = f"Stress value for MDS: {stress:.4f}" if selected_method == 'MDS' else "PCA does not calculate stress."
 
-        return fig, stress_message
-
+        return event_options, fig, stress_message
 
 # Run the app
 #if __name__ == '__main__':
     #app.run_server(debug=True)
-    
