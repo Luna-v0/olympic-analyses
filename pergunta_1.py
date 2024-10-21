@@ -124,7 +124,6 @@ layout = html.Div([
                                 'fontFamily': 'Arial, sans-serif',
                                 'color': '#333',
                                 'maxHeight': '200px',  # Altura máxima do dropdown
-                                'overflowY': 'auto'    # Adicionar barra de rolagem vertical
                             }
                         )
                     ], style={'flex': '1', 'marginRight': '20px'}),
