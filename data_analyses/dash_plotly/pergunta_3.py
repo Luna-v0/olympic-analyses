@@ -9,7 +9,7 @@ from sklearn.manifold import MDS
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 import numpy as np
 
-base_path_file = "../../data/"
+base_path_file = "../data/"
 
 # Load the data
 df = pd.read_csv(base_path_file+"polished3_with_gdp.csv")

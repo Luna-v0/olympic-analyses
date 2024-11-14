@@ -1,0 +1,36 @@
+version: '3.8'
+
+services:
+  backend:
+    build:
+      context: ./data_analyses
+      dockerfile: Dockerfile
+    container_name: olympic_backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./data_analyses:/usr/src/app
+    networks:
+      - olympic_network
+
+  frontend:
+    build:
+      context: ./data_vis
+      dockerfile: Dockerfile
+    container_name: olympic_frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data_vis:/usr/src/app
+      - usr/src/app/node_modules
+    depends_on:
+      - backend
+    networks:
+      - olympic_network
+      
+networks:
+  olympic_network:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -7,7 +7,7 @@ from sklearn.decomposition import PCA
 from sklearn.manifold import MDS
 from sklearn.preprocessing import StandardScaler, MinMaxScaler
 
-base_file_path = '../../data/'
+base_file_path = '../data/'
 
 # Load the data
 df = pd.read_csv(base_file_path+"polished3_with_gdp.csv")

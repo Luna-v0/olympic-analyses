@@ -1,6 +1,6 @@
 import pandas as pd
 
-base_file_path = '../../data/'
+base_file_path = '../data/'
 
 
 df = pd.read_csv(base_file_path+"polished2.csv")

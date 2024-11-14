@@ -12,6 +12,7 @@ export default defineConfig({
     },
   },
   server:{
-    open: "/index.html"
+    open: false,
+    host: true
   }
 });

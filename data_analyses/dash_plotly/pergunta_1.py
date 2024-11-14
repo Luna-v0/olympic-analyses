@@ -12,7 +12,7 @@ from scipy.stats import kurtosis, entropy
 # Certifique-se de que este módulo está disponível corretamente
 from pergunta_3 import adjust_medals
 
-base_file_path = '../../data/'
+base_file_path = '../data/'
 
 # Carregar o dataset
 df = pd.read_csv(base_file_path+'polished3_with_gdp.csv')

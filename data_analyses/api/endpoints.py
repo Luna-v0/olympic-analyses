@@ -2,9 +2,8 @@ from fastapi import FastAPI, Query
 
 app = FastAPI()
 
-@app.get("/")
+@app.get("/api")
 def read_root(data:list[int]=Query()) -> dict:
     return {
-        "hello_world": data
+        data: data,
     }
-
