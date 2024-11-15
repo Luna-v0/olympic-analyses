@@ -47,7 +47,7 @@ export function encodeColor() {
     ];
 
     while (colors.length > 0) {
-      yield colors.pop();
+      yield colors.shift();
 
       if (colors.length === 0) {
         yield "#" + (((1 << 24) * Math.random()) | 0).toString(16);
@@ -63,8 +63,8 @@ export function encodeColor() {
 export function generateRandomColors(data){
   const colorGenerator = encodeColor();
   const colors = {};
-  data.forEach((d) => {
-    colors[d] = colorGenerator();
+  Object.keys(allKeys(data)).forEach((key) => {
+    colors[key] = colorGenerator();
   });
   return colors;
 }

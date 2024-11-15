@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { apiCall, allKeys } from "./utils";
+import { apiCall, allKeys, generateRandomColors } from "./utils";
 
 export function createLineChart({
   selector,
@@ -165,7 +165,7 @@ apiCall({ data: ["1"] }, "http://localhost:8000/api/timeTendencies")
     createLineChart({
       selector: "#timeSeries",
       data: data,
-      lineColors: { soccer: "red", shootiing: "blue", tennis: "green" },
+      lineColors: generateRandomColors(data),
     });
   })
   .catch((error) => {
