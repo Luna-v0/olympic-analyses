@@ -1,3 +1,4 @@
+import numpy as np
 import pandas as pd
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
@@ -29,6 +30,18 @@ def read_root(data:str) -> dict:
         data: data,
     }
 
+def get_ic_and_df(agg_level:str):
+    df = None,
+    index_column = None
+    if agg_level == "Sport":
+        df = pd.read_csv("../data/by_sport.csv")
+        index_column = SPORT
+    elif agg_level == "Event":
+        df = pd.read_csv("../data/by_event.csv")
+        index_column = EVENT
+
+    return df, index_column
+
 # Isso aqui é pra quando vocês precisarem de qq dado de um esporte ou evento
 # agg_level = esporte ou evento
 @app.get("/api/getFeatures")
@@ -53,14 +66,7 @@ def get_features(
 def get_names(
     agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
 ) -> List[str]:
-    if agg_level == "Sport":
-        df = pd.read_csv("../data/by_sport.csv")
-        index_column = SPORT
-    elif agg_level == "Event":
-        df = pd.read_csv("../data/by_event.csv")
-        index_column = EVENT
-    else:
-        return ["Invalid agg_level. Must be 'Sport' or 'Event'."]
+    df, index_column = get_ic_and_df(agg_level)
 
     return df[index_column].tolist()
 
@@ -78,8 +84,38 @@ def get_sports_for_user(
         user_data: Dict = Query(..., description="User data for retrieving sports."),
         agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
 ) -> List[dict]:
+    # Features to use for the analysis
     used_columns = ['Height', 'BMI', 'Age', 'GDP']
-    pass
+
+    df, index_column = get_ic_and_df(agg_level)
+
+    user_gender = user_data.get("Sex")
+    df = df[df['Sex'] == user_gender]
+
+    feature_means = df[used_columns].mean()
+    feature_stds = df[used_columns].std()
+
+    user_row = {
+        'Height': user_data['Height'],
+        'BMI': user_data['BMI'],
+        'Age': user_data['Age'],
+        'GDP': user_data['GDP'],
+        index_column: "User"  # To identify the user row
+    }
+    df = pd.concat([df, pd.DataFrame([user_row])], ignore_index=True)
+
+    df[used_columns] = (df[used_columns] - feature_means) / feature_stds
+
+    user_index = df[df[index_column] == "User"].index[0]
+    user_features = df.loc[user_index, used_columns].values
+    df['Distance'] = df[used_columns].apply(
+        lambda row: np.linalg.norm(row - user_features), axis=1
+    )
+
+    df = df[df[index_column] != "User"]
+
+    result = df[[index_column, 'Distance']].sort_values(by='Distance').to_dict(orient='records')
+    return result
 
 
 @app.get("/api/getSportsDistance")
