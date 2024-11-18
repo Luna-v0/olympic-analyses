@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict
 
 # Agg levels
-SPORT = "sport"
-EVENT = "event"
+SPORT = "Sport"
+EVENT = "Event"
 
 # Gender
 M = "M"
@@ -49,19 +49,36 @@ def get_features(
 
     return response
 
+@app.get("/api/getNames")
+def get_names(
+    agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
+) -> List[str]:
+    if agg_level == "Sport":
+        df = pd.read_csv("../data/by_sport.csv")
+        index_column = SPORT
+    elif agg_level == "Event":
+        df = pd.read_csv("../data/by_event.csv")
+        index_column = EVENT
+    else:
+        return ["Invalid agg_level. Must be 'Sport' or 'Event'."]
+
+    return df[index_column].tolist()
 
 @app.get("/api/fairestSports")
 def get_fairest(
         agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
         gender: str = Query(..., description="Gender")
 ) -> List[dict]:
+    # Posso migrar o que já temos, mas acho que é retrabalho
     pass
 
 
 @app.get("/api/getSportsForUser")
 def get_sports_for_user(
-        user_data: Dict = Query(..., description="User data for retrieving sports.")
+        user_data: Dict = Query(..., description="User data for retrieving sports."),
+        agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
 ) -> List[dict]:
+    used_columns = ['Height', 'BMI', 'Age', 'GDP']
     pass
 
 
