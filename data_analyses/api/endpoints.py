@@ -1,9 +1,17 @@
+import pandas as pd
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict
 
+# Agg levels
 SPORT = "sport"
 EVENT = "event"
+
+# Gender
+M = "M"
+F = "F"
+ANY = "ANY"
+
 
 app = FastAPI()
 
@@ -28,12 +36,24 @@ def get_features(
         agg_level: str = Query(..., description="Aggregation level for the features. (Sport or event)"),
         names: List[str] = Query(..., description="List of sports/event names.")
 ) -> List[dict]:
-    pass
+    if agg_level == "Sport":
+        index_column = "Sport"
+    elif agg_level == "Event":
+        index_column = "Event"
+    else:
+        return [{"error": "Invalid agg_level. Must be 'Sport' or 'Event'."}]
+
+    df = pd.read_csv("../data/features.csv")
+    filtered_df = df[df[index_column].isin(names)]
+    response = filtered_df.to_dict(orient="records")
+
+    return response
 
 
 @app.get("/api/fairestSports")
 def get_fairest(
-        agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports.")
+        agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
+        gender: str = Query(..., description="Gender")
 ) -> List[dict]:
     pass
 
