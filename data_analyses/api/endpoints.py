@@ -4,8 +4,6 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict
 
-from sklearn.preprocessing import StandardScaler
-
 # Agg levels
 SPORT = "Sport"
 EVENT = "Event"
@@ -92,8 +90,7 @@ def get_sports_for_user(
     df, index_column = get_ic_and_df(agg_level)
 
     user_gender = user_data.get("Sex")
-    if user_gender != ANY:
-        df = df[df['Sex'] == user_gender]
+    df = df[df['Sex'] == user_gender]
 
     feature_means = df[used_columns].mean()
     feature_stds = df[used_columns].std()
@@ -126,26 +123,8 @@ def get_sports_distance(
         agg_level: str = Query(..., description="Aggregation level for sports distances."),
         features: List[str] = Query(..., description="List of features to calculate distances.")
 ) -> List[dict]:
-    df, index_column = get_ic_and_df(agg_level)
+    pass
 
-    scaler = StandardScaler()
-
-    df[features] = scaler.fit_transform(df[features])
-
-    distances = []
-    for i, row1 in df.iterrows():
-        for j, row2 in df.iterrows():
-            if i >= j:
-                continue
-            distance = np.linalg.norm(row1[features].values - row2[features].values)
-            distances.append({
-                f"{index_column}_1": row1[index_column],
-                f"{index_column}_2": row2[index_column],
-                "Distance": distance
-            })
-
-    sorted_distances = sorted(distances, key=lambda x: x["Distance"])
-    return sorted_distances
 
 @app.get("/api/timeTendencies")
 def time_tendencies(
