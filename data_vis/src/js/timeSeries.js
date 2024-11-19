@@ -109,7 +109,7 @@ export function createLineChart({
       .style("opacity", 1);
   });
 
-  // Add a legend
+  // Add a caption
   createLegend(svg, lineKeys, lineColors, width, margin);
 }
 

@@ -3,6 +3,7 @@ import pandas as pd
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict
+import json
 
 # Agg levels
 SPORT = "Sport"
@@ -81,9 +82,15 @@ def get_fairest(
 
 @app.get("/api/getSportsForUser")
 def get_sports_for_user(
-        user_data: Dict = Query(..., description="User data for retrieving sports."),
+        _user_data: str = Query(..., description="User data for retrieving sports."),
         agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
 ) -> List[dict]:
+    try: # Eu acabei de descobrir q o fastapi tem um problema com INPUTS de dict pela forma de que ele encoda os dados na url
+        # Então, eu tive que fazer esse workaround para que o fastapi aceite um dict como input
+        user_data = json.loads(_user_data)
+    except json.JSONDecodeError as e:
+        return [{"error": "Invalid JSON data."}]
+    
     # Features to use for the analysis
     used_columns = ['Height', 'BMI', 'Age', 'GDP']
 
