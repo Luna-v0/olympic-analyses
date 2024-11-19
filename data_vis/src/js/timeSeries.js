@@ -23,8 +23,8 @@ export function createLineChart({
   // Define dimensions for the responsive chart
   const container = d3.select(selector).node();
   const containerWidth = container.getBoundingClientRect().width;
-  const width = containerWidth - margin.left - margin.right;
-  const height = width / 2;
+  const width = 1000;
+  const height = 400;
 
   // Clear any existing SVG
   d3.select(selector).select("svg").remove();
@@ -160,16 +160,3 @@ function createLegend(svg, lineKeys, lineColors, width, margin) {
   });
 }
 
-apiCall({ data: ["1"] }, "http://localhost:8000/api/timeTendencies")
-  .then((data) => {
-    createLineChart({
-      selector: "#timeSeries",
-      data: data,
-      lineColors: generateRandomColors(data),
-    });
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-
-window.addEventListener("resize", resize);

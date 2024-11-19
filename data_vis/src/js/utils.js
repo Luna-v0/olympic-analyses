@@ -68,3 +68,9 @@ export function generateRandomColors(data){
   });
   return colors;
 }
+
+export function createDropDictFromList(list){
+  return list.map((item) => {
+    return { value: item, label: item};
+  });
+}

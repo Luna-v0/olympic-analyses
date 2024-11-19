@@ -1,15 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <link rel="stylesheet" href="../main.css">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="stylesheet" href="../main.css" />
 
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>About</title>
-</head>
-<body>
-  <h1 class="font-bold text-violet-600">timeSeries</h1>
-  <div id="timeSeries"></div>
-  <script type="module" src="../../js/timeSeries.js"></script>
-</body>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>About</title>
+  </head>
+  <body>
+    <div class="max-w-md mx-auto p-6 bg-white rounded-md shadow-md mb-10">
+      <form id="dataForm" class="space-y-4">
+        <div>
+          <label for="input1" class="block text-sm font-medium text-gray-700"
+            >Input 1</label
+          >
+          <input
+            id="input1"
+            name="input1"
+            type="text"
+            required
+            class="mt-1 p-2 block w-full border-gray-300 rounded-md shadow-sm"
+          />
+        </div>
+        <div>
+          <label for="multiDropdown" class="block text-sm font-medium text-gray-700">Events</label>
+          <select
+            id="multiDropdown"
+            name="multiDropdown"
+            multiple
+            class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm h-32"
+          >
+            <!-- Options will be dynamically populated -->
+          </select>
+        </div>
+        
+        <div id="selectedItemsContainer" class="mt-4 p-4 border rounded-md bg-gray-50">
+          <p class="text-sm font-medium text-gray-700">Selected Items:</p>
+          <ul id="selectedItemsList" class="mt-2 space-y-2"></ul>
+        </div>
+        <button
+          type="submit"
+          class="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+        >
+          Submit
+        </button>
+      </form>
+    </div>
+    <div id="timeSeries" class="mx-auto flex justify-center items-center"></div>
+    <script type="module" src="../../js/timeTendencies.js"></script>
+  </body>
 </html>
