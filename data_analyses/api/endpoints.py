@@ -149,9 +149,10 @@ def get_sports_distance(
 
 @app.get("/api/timeTendencies")
 def time_tendencies(
-        data: List[str] = Query([], description="List of tendencies to analyze over time.")
+        feature: str = Query("", description="Feature to be analyzed"),
+        sports: List[str] = Query([], description="List of sports to analyze over time.")
 ) -> List[dict]:
-    print(data)
+    print(sports)
 
     response = [
         {"date": "2026", "lines": {"soccer": 25, "shootiing": 17}},
