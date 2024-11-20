@@ -4,6 +4,7 @@ from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict
 import json
+from sklearn.preprocessing import StandardScaler
 
 # Agg levels
 SPORT = "Sport"
@@ -68,7 +69,7 @@ def get_names(
     agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
 ) -> List[str]:
     df, index_column = get_ic_and_df(agg_level)
-
+    if index_column is None: return []
     return df[index_column].tolist()
 
 @app.get("/api/fairestSports")
@@ -82,13 +83,12 @@ def get_fairest(
 
 @app.get("/api/getSportsForUser")
 def get_sports_for_user(
-        _user_data: str = Query(..., description="User data for retrieving sports."),
-        agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
+    _user_data: str = Query(..., description="User data for retrieving sports."),
+    agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
 ) -> List[dict]:
-    try: # Eu acabei de descobrir q o fastapi tem um problema com INPUTS de dict pela forma de que ele encoda os dados na url
-        # Então, eu tive que fazer esse workaround para que o fastapi aceite um dict como input
+    try:
         user_data = json.loads(_user_data)
-    except json.JSONDecodeError as e:
+    except json.JSONDecodeError:
         return [{"error": "Invalid JSON data."}]
 
     # Features to use for the analysis
@@ -99,19 +99,35 @@ def get_sports_for_user(
     user_gender = user_data.get("Sex")
     df = df[df['Sex'] == user_gender]
 
+    gdp_df = pd.read_csv('noc_gdp.csv')
+    df = df.merge(gdp_df, on='NOC', how='left')
+
     feature_means = df[used_columns].mean()
     feature_stds = df[used_columns].std()
 
+    df[used_columns] = (df[used_columns] - feature_means) / feature_stds
+
+    user_noc = user_data.get('NOC')
+    if not user_noc:
+        return [{"error": "User NOC is missing."}]
+
+    user_gdp_row = gdp_df[gdp_df['NOC'] == user_noc]
+    if user_gdp_row.empty:
+        return [{"error": "User NOC not found in GDP data."}]
+
+    user_gdp = user_gdp_row.iloc[0]['GDP']
+
     user_row = {
-        'Height': user_data['Height'],
-        'BMI': user_data['BMI'],
-        'Age': user_data['Age'],
-        'GDP': user_data['GDP'],
+        'Height': (user_data['Height'] - feature_means['Height']) / feature_stds['Height'],
+        'BMI': (user_data['BMI'] - feature_means['BMI']) / feature_stds['BMI'],
+        'Age': (user_data['Age'] - feature_means['Age']) / feature_stds['Age'],
+        'GDP': (user_gdp - feature_means['GDP']) / feature_stds['GDP'],
+        'Sex': user_data['Sex'],
+        'NOC': user_noc,
         index_column: "User"  # To identify the user row
     }
-    df = pd.concat([df, pd.DataFrame([user_row])], ignore_index=True)
 
-    df[used_columns] = (df[used_columns] - feature_means) / feature_stds
+    df = pd.concat([df, pd.DataFrame([user_row])], ignore_index=True)
 
     user_index = df[df[index_column] == "User"].index[0]
     user_features = df.loc[user_index, used_columns].values
@@ -123,6 +139,7 @@ def get_sports_for_user(
 
     result = df[[index_column, 'Distance']].sort_values(by='Distance').to_dict(orient='records')
     return result
+
 
 
 @app.get("/api/getSportsDistance")
