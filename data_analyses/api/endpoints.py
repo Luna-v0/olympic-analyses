@@ -3,8 +3,7 @@ import pandas as pd
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List, Dict
-
-from sklearn.preprocessing import StandardScaler
+import json
 
 # Agg levels
 SPORT = "Sport"
@@ -83,17 +82,22 @@ def get_fairest(
 
 @app.get("/api/getSportsForUser")
 def get_sports_for_user(
-        user_data: Dict = Query(..., description="User data for retrieving sports."),
+        _user_data: str = Query(..., description="User data for retrieving sports."),
         agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
 ) -> List[dict]:
+    try: # Eu acabei de descobrir q o fastapi tem um problema com INPUTS de dict pela forma de que ele encoda os dados na url
+        # Então, eu tive que fazer esse workaround para que o fastapi aceite um dict como input
+        user_data = json.loads(_user_data)
+    except json.JSONDecodeError as e:
+        return [{"error": "Invalid JSON data."}]
+
     # Features to use for the analysis
     used_columns = ['Height', 'BMI', 'Age', 'GDP']
 
     df, index_column = get_ic_and_df(agg_level)
 
     user_gender = user_data.get("Sex")
-    if user_gender != ANY:
-        df = df[df['Sex'] == user_gender]
+    df = df[df['Sex'] == user_gender]
 
     feature_means = df[used_columns].mean()
     feature_stds = df[used_columns].std()
@@ -149,10 +153,13 @@ def get_sports_distance(
 
 @app.get("/api/timeTendencies")
 def time_tendencies(
-        feature: str = Query("", description="Feature to be analyzed"),
-        sports: List[str] = Query([], description="List of sports to analyze over time.")
+        isSportsOrEvents: str = Query(..., description="string with either 'sports' or 'events'"),
+        feature: str = Query(..., description="tendency to analyze over time."),
+        sportsOrEvents: List[str] = Query([], description="List of Sports or events to analyze."),
 ) -> List[dict]:
-    print(sports)
+    print(sportsOrEvents)
+    print(isSportsOrEvents)
+    print(feature)
 
     response = [
         {"date": "2026", "lines": {"soccer": 25, "shootiing": 17}},

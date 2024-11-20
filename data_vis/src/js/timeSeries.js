@@ -8,109 +8,110 @@ export function createLineChart({
   margin = { top: 40, right: 30, bottom: 50, left: 50 },
   animationDuration = 1000,
 }) {
-  // Parse the date as yearly data
   const parseDate = d3.timeParse("%Y");
   data.forEach((d) => {
     d.date = parseDate(d.date); // Convert string years into Date objects
   });
 
-  // Extract line keys dynamically
   const lineKeys = Object.keys(allKeys(data));
-
-  // Fill missing years with `null`
   data = fillMissingYears(data, lineKeys);
 
-  // Define dimensions for the responsive chart
-  const container = d3.select(selector).node();
-  const containerWidth = container.getBoundingClientRect().width;
-  const width = containerWidth - margin.left - margin.right;
-  const height = width / 2;
+  // Define function to resize the chart
+  function drawChart() {
+    const container = d3.select(selector).node();
+    const containerWidth = container.clientWidth;
+    const containerHeight = container.clientHeight;
 
-  // Clear any existing SVG
-  d3.select(selector).select("svg").remove();
+    const width = containerWidth - margin.left - margin.right;
+    const height = containerHeight - margin.top - margin.bottom;
 
-  // Create the SVG container
-  const svg = d3
-    .select(selector)
-    .append("svg")
-    .attr("width", width + margin.left + margin.right)
-    .attr("height", height + margin.top + margin.bottom)
-    .append("g")
-    .attr("transform", `translate(${margin.left}, ${margin.top})`);
+    // Clear any existing SVG
+    d3.select(selector).select("svg").remove();
 
-  // Define X and Y scales
-  const x = d3
-    .scaleTime()
-    .domain(d3.extent(data, (d) => d.date))
-    .range([0, width]);
+    // Create the SVG container
+    const svg = d3
+      .select(selector)
+      .append("svg")
+      .attr("viewBox", `0 0 ${containerWidth} ${containerHeight}`)
+      .attr("preserveAspectRatio", "xMinYMin meet")
+      .append("g")
+      .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-  const y = d3
-    .scaleLinear()
-    .domain([
-      0,
-      d3.max(data, (d) => d3.max(lineKeys.map((key) => d.lines[key]))),
-    ])
-    .nice()
-    .range([height, 0]);
+    const x = d3
+      .scaleTime()
+      .domain(d3.extent(data, (d) => d.date))
+      .range([0, width]);
 
-  // Add X-axis
-  svg
-    .append("g")
-    .attr("transform", `translate(0, ${height})`)
-    .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y"))) // Format as years
-    .selectAll("text")
-    .attr("transform", "rotate(-45)")
-    .style("text-anchor", "end");
+    const y = d3
+      .scaleLinear()
+      .domain([
+        0,
+        d3.max(data, (d) => d3.max(lineKeys.map((key) => d.lines[key]))),
+      ])
+      .nice()
+      .range([height, 0]);
 
-  // Add Y-axis
-  svg.append("g").call(d3.axisLeft(y));
-
-  // Generate lines for each key
-  lineKeys.forEach((key) => {
-    // Line generator specific to this key
-    const lineGenerator = d3
-      .line()
-      .defined((d) => d.lines[key] !== null) // Skip null values
-      .x((d) => x(d.date))
-      .y((d) => y(d.lines[key]));
-
-    // Append the line path
     svg
-      .append("path")
-      .datum(data)
-      .attr("fill", "none")
-      .attr("stroke", lineColors[key] || "black")
-      .attr("stroke-width", 2)
-      .attr("d", lineGenerator)
-      .attr("stroke-dasharray", function () {
-        const totalLength = this.getTotalLength();
-        return `${totalLength} ${totalLength}`;
-      })
-      .attr("stroke-dashoffset", function () {
-        return this.getTotalLength();
-      })
-      .transition()
-      .duration(animationDuration)
-      .attr("stroke-dashoffset", 0);
+      .append("g")
+      .attr("transform", `translate(0, ${height})`)
+      .call(d3.axisBottom(x).tickFormat(d3.timeFormat("%Y")))
+      .selectAll("text")
+      .attr("transform", "rotate(-45)")
+      .style("text-anchor", "end");
 
-    // Add points for each valid data point
-    svg
-      .selectAll(`circle-${key}`)
-      .data(data.filter((d) => d.lines[key] !== null)) // Only valid points
-      .enter()
-      .append("circle")
-      .attr("cx", (d) => x(d.date))
-      .attr("cy", (d) => y(d.lines[key]))
-      .attr("r", 4)
-      .attr("fill", lineColors[key] || "black")
-      .style("opacity", 0)
-      .transition()
-      .delay(animationDuration)
-      .style("opacity", 1);
-  });
+    svg.append("g").call(d3.axisLeft(y));
 
-  // Add a legend
-  createLegend(svg, lineKeys, lineColors, width, margin);
+    lineKeys.forEach((key) => {
+      const lineGenerator = d3
+        .line()
+        .defined((d) => d.lines[key] !== null)
+        .x((d) => x(d.date))
+        .y((d) => y(d.lines[key]));
+
+      const path = svg
+        .append("path")
+        .datum(data)
+        .attr("fill", "none")
+        .attr("stroke", lineColors[key] || "black")
+        .attr("stroke-width", 2)
+        .attr("d", lineGenerator)
+        .attr("stroke-dasharray", function () {
+          const totalLength = this.getTotalLength();
+          return `${totalLength} ${totalLength}`;
+        })
+        .attr("stroke-dashoffset", function () {
+          return this.getTotalLength();
+        });
+
+      // Add animation to the line
+      path
+        .transition()
+        .duration(animationDuration)
+        .attr("stroke-dashoffset", 0);
+
+      svg
+        .selectAll(`circle-${key}`)
+        .data(data.filter((d) => d.lines[key] !== null))
+        .enter()
+        .append("circle")
+        .attr("cx", (d) => x(d.date))
+        .attr("cy", (d) => y(d.lines[key]))
+        .attr("r", 4)
+        .attr("fill", lineColors[key] || "black")
+        .style("opacity", 0)
+        .transition()
+        .delay(animationDuration)
+        .style("opacity", 1);
+    });
+
+    createLegend(svg, lineKeys, lineColors, width, margin);
+  }
+
+  // Initial draw
+  drawChart();
+
+  // Add resize listener
+  window.addEventListener("resize", drawChart);
 }
 
 // Helper function to fill missing years
@@ -159,17 +160,3 @@ function createLegend(svg, lineKeys, lineColors, width, margin) {
       .text(`${key}: ${lineColors[key] || "black"}Line`);
   });
 }
-
-apiCall({ data: ["1"] }, "http://localhost:8000/api/timeTendencies")
-  .then((data) => {
-    createLineChart({
-      selector: "#timeSeries",
-      data: data,
-      lineColors: generateRandomColors(data),
-    });
-  })
-  .catch((error) => {
-    console.error(error);
-  });
-
-window.addEventListener("resize", resize);

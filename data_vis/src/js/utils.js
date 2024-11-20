@@ -1,6 +1,12 @@
 import axios from "axios";
 
 export async function apiCall(parameters, endpoint) {
+  for (const [key, value] of Object.entries(parameters)) {
+    if (!Array.isArray(value) && typeof value === "object") {
+      parameters[key] = JSON.stringify(value);
+    }
+  }
+
   const response = await axios.get(endpoint, {
     params: parameters,
     paramsSerializer: {
@@ -22,13 +28,13 @@ export async function apiCall(parameters, endpoint) {
 
 export function allKeys(data) {
   return data.reduce((acc, d) => {
-      Object.keys(d.lines).forEach((key) => {
-          if (!acc[key]) {
-              acc[key] = true;
-          }
-      });
-      return acc;
-  },{});
+    Object.keys(d.lines).forEach((key) => {
+      if (!acc[key]) {
+        acc[key] = true;
+      }
+    });
+    return acc;
+  }, {});
 }
 
 export function encodeColor() {
@@ -59,12 +65,17 @@ export function encodeColor() {
   return () => colorGenerator.next().value;
 }
 
-
-export function generateRandomColors(data){
+export function generateRandomColors(data) {
   const colorGenerator = encodeColor();
   const colors = {};
   Object.keys(allKeys(data)).forEach((key) => {
     colors[key] = colorGenerator();
   });
   return colors;
+}
+
+export function createDropDictFromList(list) {
+  return list.map((item) => {
+    return { value: item, label: item };
+  });
 }
