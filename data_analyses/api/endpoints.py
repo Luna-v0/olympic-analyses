@@ -36,10 +36,10 @@ def get_ic_and_df(agg_level:str):
     df = None,
     index_column = None
     if agg_level == "Sport":
-        df = pd.read_csv("../data/by_sport.csv")
+        df = pd.read_csv("data/by_sport.csv")
         index_column = SPORT
     elif agg_level == "Event":
-        df = pd.read_csv("../data/by_event.csv")
+        df = pd.read_csv("data/by_event.csv")
         index_column = EVENT
 
     return df, index_column
@@ -58,7 +58,7 @@ def get_features(
     else:
         return [{"error": "Invalid agg_level. Must be 'Sport' or 'Event'."}]
 
-    df = pd.read_csv("../data/features.csv")
+    df = pd.read_csv("data/features.csv")
     filtered_df = df[df[index_column].isin(names)]
     response = filtered_df.to_dict(orient="records")
 
@@ -99,7 +99,8 @@ def get_sports_for_user(
     user_gender = user_data.get("Sex")
     df = df[df['Sex'] == user_gender]
 
-    gdp_df = pd.read_csv('noc_gdp.csv')
+    gdp_df = pd.read_csv('data/noc_gdp.csv')
+    
     df = df.merge(gdp_df, on='NOC', how='left')
 
     feature_means = df[used_columns].mean()
