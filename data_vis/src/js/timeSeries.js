@@ -23,8 +23,10 @@ export function createLineChart({
   // Define dimensions for the responsive chart
   const container = d3.select(selector).node();
   const containerWidth = container.getBoundingClientRect().width;
-  const width = 1000;
-  const height = 400;
+  const containerHeight = container.getBoundingClientRect().height;
+
+  const width = containerWidth ;
+  const height = containerHeight;
 
   // Clear any existing SVG
   d3.select(selector).select("svg").remove();
