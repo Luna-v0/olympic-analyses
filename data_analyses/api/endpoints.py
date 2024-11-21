@@ -162,9 +162,13 @@ def get_sports_for_user(
 
     user_gdp = user_gdp_row.iloc[0]['GDP']
 
+    if 'Weight' not in user_data or 'Height' not in user_data:
+        return [{"error": "User weight and height are required to calculate BMI."}]
+    user_bmi = user_data['Weight'] / ((user_data['Height'] / 100) ** 2)
+
     user_row = {
         'Height': (user_data['Height'] - feature_means['Height']) / feature_stds['Height'],
-        'BMI': (user_data['BMI'] - feature_means['BMI']) / feature_stds['BMI'],
+        'BMI': (user_bmi - feature_means['BMI']) / feature_stds['BMI'],
         'Age': (user_data['Age'] - feature_means['Age']) / feature_stds['Age'],
         'GDP': (user_gdp - feature_means['GDP']) / feature_stds['GDP'],
         'Sex': user_data['Sex'],
