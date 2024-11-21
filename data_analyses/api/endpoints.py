@@ -52,18 +52,13 @@ def filter_for_sex(df:pd.DataFrame, sex:str):
 # Isso aqui é pra quando vocês precisarem de qq dado de um esporte ou evento
 # agg_level = esporte ou evento
 @app.get("/api/getFeatures")
-def get_features(
+def get_features_agg(
         agg_level: str = Query(..., description="Aggregation level for the features. (Sport or event)"),
-        names: List[str] = Query(..., description="List of sports/event names.")
+        names: List[str] = Query(..., description="List of sports/event names."),
+        gender: str = Query(ANY, description="Gender")
 ) -> List[dict]:
-    if agg_level == "Sport":
-        index_column = "Sport"
-    elif agg_level == "Event":
-        index_column = "Event"
-    else:
-        return [{"error": "Invalid agg_level. Must be 'Sport' or 'Event'."}]
-
-    df = pd.read_csv("../data/features.csv")
+    df, index_column = get_ic_and_df(agg_level)
+    df = filter_for_sex(df, gender)
     filtered_df = df[df[index_column].isin(names)]
     response = filtered_df.to_dict(orient="records")
 
