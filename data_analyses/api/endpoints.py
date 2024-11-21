@@ -145,8 +145,7 @@ def get_sports_for_user(
     user_gender = user_data.get("Sex")
     df = df[df['Sex'] == user_gender]
 
-    gdp_df = pd.read_csv('noc_gdp.csv')
-    df = df.merge(gdp_df, on='NOC', how='left')
+    gdp_df = pd.read_csv('../data/noc_gdp.csv')
 
     feature_means = df[used_columns].mean()
     feature_stds = df[used_columns].std()
