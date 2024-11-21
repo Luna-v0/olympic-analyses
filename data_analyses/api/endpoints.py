@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 import json
 from sklearn.preprocessing import StandardScaler
-from typing import List
+from typing import List, Dict, Union
 import pandas as pd
 from scipy.stats import ks_2samp
 import numpy as np
@@ -26,6 +26,23 @@ app.add_middleware(
     allow_methods=["*"],  # HTTP methods: GET, POST, PUT, etc.
     allow_headers=["*"],  # Headers like Content-Type, Authorization, etc.
 )
+
+# List of features for POST endpoints
+FEATURES = [
+    "Name", "Age", "Height", "Weight", "Team", "NOC", "Games", "Year", 
+    "City", "Sport", "Event", "Medal", "BMI"
+]
+
+# Helper function to load data
+def load_data():
+    try:
+        return pd.read_csv("../data/athlete_events.csv")
+    except FileNotFoundError:
+        return pd.DataFrame()  # Return empty DataFrame if file is not found
+
+# Helper function to save data
+def save_data(df):
+    df.to_csv("../data/athlete_events.csv", index=False)
 
 @app.get("/api")
 def read_root(data:str) -> dict:

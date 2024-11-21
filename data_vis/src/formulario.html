@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Athlete Form</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f4f4f9;
+        }
+        .form-container {
+            width: 100%;
+            max-width: 400px;
+            background-color: white;
+            padding: 20px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            border-radius: 8px;
+        }
+        .form-container h1 {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+        .form-container label {
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: block;
+        }
+        .form-container input {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        .form-container button {
+            width: 100%;
+            padding: 10px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .form-container button:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <div class="form-container">
+        <h1>Athlete Form</h1>
+        <form id="athleteForm">
+            <label for="height">Height</label>
+            <input type="number" step="0.01" id="height" name="height" placeholder="Enter height" required>
+
+            <label for="weight">Weight</label>
+            <input type="number" step="0.01" id="weight" name="weight" placeholder="Enter weight" required>
+
+            <label for="age">Age</label>
+            <input type="number" id="age" name="age" placeholder="Enter age" required>
+
+            <label for="noc">NOC</label>
+            <input type="text" id="noc" name="noc" placeholder="Enter NOC" required>
+
+            <label for="sex">Sex</label>
+            <input type="text" id="sex" name="sex" placeholder="Enter sex (M/F)" required>
+
+            <button type="submit">Submit</button>
+        </form>
+    </div>
+
+    <script>
+        const form = document.getElementById("athleteForm");
+
+        form.addEventListener("submit", async (event) => {
+            event.preventDefault();
+
+            const formData = {
+                height: parseFloat(form.height.value),
+                weight: parseFloat(form.weight.value),
+                age: parseInt(form.age.value),
+                noc: form.noc.value,
+                sex: form.sex.value.toUpperCase(),
+            };
+
+            try {
+                const response = await fetch("http://localhost:8000/api/athlete", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify(formData),
+                });
+
+                if (response.ok) {
+                    alert("Athlete data submitted successfully!");
+                    form.reset();
+                } else {
+                    const error = await response.json();
+                    alert(`Error: ${error.detail || "Unable to submit data"}`);
+                }
+            } catch (error) {
+                console.error("Error:", error);
+                alert("Failed to submit data.");
+            }
+        });
+    </script>
+</body>
+</html>
