@@ -69,18 +69,14 @@ def filter_for_sex(df:pd.DataFrame, sex:str):
 # Isso aqui é pra quando vocês precisarem de qq dado de um esporte ou evento
 # agg_level = esporte ou evento
 @app.get("/api/getFeatures")
-def get_features(
+def get_features_agg(
         agg_level: str = Query(..., description="Aggregation level for the features. (Sport or event)"),
-        names: List[str] = Query(..., description="List of sports/event names.")
+        names: List[str] = Query(..., description="List of sports/event names."),
+        gender: str = Query(ANY, description="Gender")
 ) -> List[dict]:
-    if agg_level == "Sport":
-        index_column = "Sport"
-    elif agg_level == "Event":
-        index_column = "Event"
-    else:
-        return [{"error": "Invalid agg_level. Must be 'Sport' or 'Event'."}]
-
-    df = pd.read_csv("../data/features.csv")
+    df, index_column = get_ic_and_df(agg_level)
+    if index_column is None: return []
+    df = filter_for_sex(df, gender)
     filtered_df = df[df[index_column].isin(names)]
     response = filtered_df.to_dict(orient="records")
 
@@ -89,18 +85,16 @@ def get_features(
 @app.get("/api/getNames")
 def get_names(
     agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
+    gender: str = Query(ANY, description="Gender")
+
 ) -> List[str]:
     df, index_column = get_ic_and_df(agg_level)
+    df = filter_for_sex(df, gender)
     if index_column is None: return []
     return df[index_column].tolist()
 
 
-
-
 # Isso pode ser preprocessado bem facilmente, se performance for um problema
-
-
-
 @app.get("/api/fairestSports")
 def get_fairest(
         agg_level: str = Query(..., description="Aggregation (Sport or Event) level for fairest sports."),
@@ -168,8 +162,7 @@ def get_sports_for_user(
     user_gender = user_data.get("Sex")
     df = df[df['Sex'] == user_gender]
 
-    gdp_df = pd.read_csv('noc_gdp.csv')
-    df = df.merge(gdp_df, on='NOC', how='left')
+    gdp_df = pd.read_csv('../data/noc_gdp.csv')
 
     feature_means = df[used_columns].mean()
     feature_stds = df[used_columns].std()
