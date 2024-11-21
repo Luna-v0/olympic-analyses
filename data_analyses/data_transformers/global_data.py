@@ -75,8 +75,8 @@ def generate_data_for_gender(sex, n_samples):
     return data
 
 # Generate datasets for both genders
-data_male = generate_data_for_gender('M', 1000)
-data_female = generate_data_for_gender('F', 1000)
+data_male = generate_data_for_gender('M', 10000)
+data_female = generate_data_for_gender('F', 10000)
 
 # Combine datasets
 data = pd.concat([data_male, data_female], ignore_index=True)
