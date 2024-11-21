@@ -220,40 +220,33 @@ def get_sports_distance(
 
 @app.get("/api/timeTendencies")
 def time_tendencies(
-        isSportsOrEvents: str = Query(..., description="String with either 'sports' or 'events'"),
-        feature: str = Query(..., description="Feature to analyze over time."),
-        sportsOrEvents: List[str] = Query([], description="List of Sports or Events to analyze."),
+    isSportsOrEvents: str = Query(..., description="String with either 'sports' or 'events'"),
+    feature: str = Query(..., description="Feature to analyze over time."),
+    sportsOrEvents: List[str] = Query([], description="List of Sports or Events to analyze."),
 ) -> List[dict]:
-    import pandas as pd
-
-    if isSportsOrEvents.lower() not in ['sports', 'events']:
-        return [{"error": "isSportsOrEvents must be 'sports' or 'events'"}]
-
     try:
         df = pd.read_csv("../data/athlete_events.csv")
     except FileNotFoundError:
         return [{"error": "Data file not found."}]
+    except Exception as e:
+        return [{"error": f"Unexpected error while loading data: {str(e)}"}]
 
     if feature not in df.columns:
         return [{"error": f"Feature '{feature}' not found in data"}]
 
+    if isSportsOrEvents.lower() not in ['sports', 'events']:
+        return [{"error": "isSportsOrEvents must be either 'sports' or 'events'"}]
+
+    group_column = 'Sport' if isSportsOrEvents.lower() == 'sports' else 'Event'
+
     if not sportsOrEvents:
-        if isSportsOrEvents.lower() == 'sports':
-            sportsOrEvents = df['Sport'].dropna().unique().tolist()
-        else:
-            sportsOrEvents = df['Event'].dropna().unique().tolist()
+        sportsOrEvents = df[group_column].dropna().unique().tolist()
 
-    if isSportsOrEvents.lower() == 'sports':
-        df_filtered = df[df['Sport'].isin(sportsOrEvents)].copy()
-        group_column = 'Sport'
-    else:
-        df_filtered = df[df['Event'].isin(sportsOrEvents)].copy()
-        group_column = 'Event'
-
+    df_filtered = df[df[group_column].isin(sportsOrEvents)].copy()
     df_filtered = df_filtered.dropna(subset=['Year', feature])
 
     if df_filtered.empty:
-        return []
+        return [{"error": "No data available for the given filters."}]
 
     df_filtered['Year'] = df_filtered['Year'].astype(int).astype(str)
 
@@ -263,26 +256,24 @@ def time_tendencies(
         df_grouped = df_filtered.groupby(['Year', group_column])[feature].agg(lambda x: x.mode().iloc[0]).reset_index()
 
     if df_grouped.empty:
-        return []
+        return [{"error": "No data after grouping and analysis."}]
 
     df_pivot = df_grouped.pivot(index='Year', columns=group_column, values=feature)
-
     if df_pivot.empty:
-        return []
+        return [{"error": "No data after pivot transformation."}]
 
     df_pivot.reset_index(inplace=True)
 
     response = []
-    for idx, row in df_pivot.iterrows():
+    for _, row in df_pivot.iterrows():
         date = row['Year']
         lines = {}
         for sport_or_event in sportsOrEvents:
             if sport_or_event in df_pivot.columns:
-                value = row[sport_or_event]
+                value = row.get(sport_or_event)
                 if pd.notnull(value):
                     lines[sport_or_event] = value
         if lines:
             response.append({"date": date, "lines": lines})
 
     return response
-
