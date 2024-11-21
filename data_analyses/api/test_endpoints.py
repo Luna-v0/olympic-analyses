@@ -85,8 +85,30 @@ def test_get_sports_for_user():
         assert "Distance" in item, "Each item should contain a 'Distance' key"
     print(data)
 
+def test_get_sports_distance():
+    response = client.get(
+        "/api/getSportsDistance",
+        params={
+            "agg_level": "Sport",
+            "sex": "M",
+            "features": ["Height", "BMI", "Age", "GDP"]
+        }
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert isinstance(data, list), "Response should be a list of dictionaries"
+    assert all(isinstance(item, dict) for item in data), "Each item in the response should be a dictionary"
+    for item in data:
+        assert f"Sport_1" in item or f"Event_1" in item, "Each item should contain the first aggregation level key"
+        assert f"Sport_2" in item or f"Event_2" in item, "Each item should contain the second aggregation level key"
+        assert "Distance" in item, "Each item should contain a 'Distance' key"
+        assert isinstance(item["Distance"], float), "Distance should be a float value"
+    print(data)
+
+
 # test_get_fairest_sports()
 # test_get_fairest_sports_2()
 # test_get_features_sport()
 # test_get_names_sport()
-test_get_sports_for_user()
+# test_get_sports_for_user()
+test_get_sports_distance()
