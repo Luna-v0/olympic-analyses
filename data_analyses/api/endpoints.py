@@ -54,10 +54,10 @@ def get_ic_and_df(agg_level:str):
     df = None,
     index_column = None
     if agg_level == "Sport":
-        df = pd.read_csv("../data/by_sport.csv")
+        df = pd.read_csv("data/by_sport.csv")
         index_column = SPORT
     elif agg_level == "Event":
-        df = pd.read_csv("../data/by_event.csv")
+        df = pd.read_csv("data/by_event.csv")
         index_column = EVENT
 
     return df, index_column
@@ -179,9 +179,13 @@ def get_sports_for_user(
 
     user_gdp = user_gdp_row.iloc[0]['GDP']
 
+    if 'Weight' not in user_data or 'Height' not in user_data:
+        return [{"error": "User weight and height are required to calculate BMI."}]
+    user_bmi = user_data['Weight'] / ((user_data['Height'] / 100) ** 2)
+
     user_row = {
         'Height': (user_data['Height'] - feature_means['Height']) / feature_stds['Height'],
-        'BMI': (user_data['BMI'] - feature_means['BMI']) / feature_stds['BMI'],
+        'BMI': (user_bmi - feature_means['BMI']) / feature_stds['BMI'],
         'Age': (user_data['Age'] - feature_means['Age']) / feature_stds['Age'],
         'GDP': (user_gdp - feature_means['GDP']) / feature_stds['GDP'],
         'Sex': user_data['Sex'],
@@ -233,40 +237,33 @@ def get_sports_distance(
 
 @app.get("/api/timeTendencies")
 def time_tendencies(
-        isSportsOrEvents: str = Query(..., description="String with either 'sports' or 'events'"),
-        feature: str = Query(..., description="Feature to analyze over time."),
-        sportsOrEvents: List[str] = Query([], description="List of Sports or Events to analyze."),
+    isSportsOrEvents: str = Query(..., description="String with either 'sports' or 'events'"),
+    feature: str = Query(..., description="Feature to analyze over time."),
+    sportsOrEvents: List[str] = Query([], description="List of Sports or Events to analyze."),
 ) -> List[dict]:
-    import pandas as pd
-
-    if isSportsOrEvents.lower() not in ['sports', 'events']:
-        return [{"error": "isSportsOrEvents must be 'sports' or 'events'"}]
-
     try:
         df = pd.read_csv("../data/athlete_events.csv")
     except FileNotFoundError:
         return [{"error": "Data file not found."}]
+    except Exception as e:
+        return [{"error": f"Unexpected error while loading data: {str(e)}"}]
 
     if feature not in df.columns:
         return [{"error": f"Feature '{feature}' not found in data"}]
 
+    if isSportsOrEvents.lower() not in ['sports', 'events']:
+        return [{"error": "isSportsOrEvents must be either 'sports' or 'events'"}]
+
+    group_column = 'Sport' if isSportsOrEvents.lower() == 'sports' else 'Event'
+
     if not sportsOrEvents:
-        if isSportsOrEvents.lower() == 'sports':
-            sportsOrEvents = df['Sport'].dropna().unique().tolist()
-        else:
-            sportsOrEvents = df['Event'].dropna().unique().tolist()
+        sportsOrEvents = df[group_column].dropna().unique().tolist()
 
-    if isSportsOrEvents.lower() == 'sports':
-        df_filtered = df[df['Sport'].isin(sportsOrEvents)].copy()
-        group_column = 'Sport'
-    else:
-        df_filtered = df[df['Event'].isin(sportsOrEvents)].copy()
-        group_column = 'Event'
-
+    df_filtered = df[df[group_column].isin(sportsOrEvents)].copy()
     df_filtered = df_filtered.dropna(subset=['Year', feature])
 
     if df_filtered.empty:
-        return []
+        return [{"error": "No data available for the given filters."}]
 
     df_filtered['Year'] = df_filtered['Year'].astype(int).astype(str)
 
@@ -276,47 +273,24 @@ def time_tendencies(
         df_grouped = df_filtered.groupby(['Year', group_column])[feature].agg(lambda x: x.mode().iloc[0]).reset_index()
 
     if df_grouped.empty:
-        return []
+        return [{"error": "No data after grouping and analysis."}]
 
     df_pivot = df_grouped.pivot(index='Year', columns=group_column, values=feature)
-
     if df_pivot.empty:
-        return []
+        return [{"error": "No data after pivot transformation."}]
 
     df_pivot.reset_index(inplace=True)
 
     response = []
-    for idx, row in df_pivot.iterrows():
+    for _, row in df_pivot.iterrows():
         date = row['Year']
         lines = {}
         for sport_or_event in sportsOrEvents:
             if sport_or_event in df_pivot.columns:
-                value = row[sport_or_event]
+                value = row.get(sport_or_event)
                 if pd.notnull(value):
                     lines[sport_or_event] = value
         if lines:
             response.append({"date": date, "lines": lines})
 
     return response
-
-# Generate POST endpoints dynamically
-for feature in FEATURES:
-    @app.post(f"/api/{feature}")
-    def update_feature(
-        new_data: Dict[str, Union[int, float, str]] = Body(..., description=f"New data for {feature}.")
-    ):
-        """
-        POST endpoint to update or insert data for the feature.
-        Expects a JSON object with a row of data for the given feature.
-        """
-        df = load_data()
-        
-        if df.empty:
-            # Initialize the DataFrame with the new data if file is empty
-            df = pd.DataFrame([new_data])
-        else:
-            # Append new data to the existing DataFrame
-            df = pd.concat([df, pd.DataFrame([new_data])], ignore_index=True)
-        
-        save_data(df)
-        return {"message": f"Data for {feature} has been successfully updated.", "new_data": new_data}

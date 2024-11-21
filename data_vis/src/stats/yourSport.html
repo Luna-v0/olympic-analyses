@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="stylesheet" href="../main.css" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>About</title>
+</head>
+
+<body>
+
+  <div class="mx-auto p-6">
+    <!-- Container for Flex Layout -->
+    <div class="flex flex-row gap-6">
+      <!-- Form Section -->
+      <div class="w-1/4 p-6 bg-white rounded-md shadow-md">
+        <form id="dataForm" class="space-y-4">
+          <div>
+            <label for="Age" className="block text-sm font-medium text-gray-700">Age (in years):</label>
+            <input type="number" name="Age" className="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+            </input>
+            <label for="Height" className="block text-sm font-medium text-gray-700">Height (in cm):</label>
+            <input type="number" name="Height" className="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+            </input>
+            <label for="Weight" className="block text-sm font-medium text-gray-700">Weight (in kilograms):</label>
+            <input type="number" name="Weight" className="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+            </input>
+
+            <label for="dropdown" class="block text-sm font-medium text-gray-700">Country</label>
+            <select id="dropdown" name="Team" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+            </select>
+            <div id="selectedItemContainer1" class="mt-4 p-4 border rounded-md bg-gray-50">
+              <p class="text-sm font-medium text-gray-700">Item</p>
+            </div>
+
+            <label for="dropdown2" class="block text-sm font-medium text-gray-700">Sex:</label>
+            <select id="dropdown2" name="Sex" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
+            </select>
+            <div id="selectedItemContainer2" class="mt-4 p-4 border rounded-md bg-gray-50">
+              <p class="text-sm font-medium text-gray-700">Item</p>
+            </div>
+            <button type="submit" class="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600">
+              Submit
+            </button>
+          </div>
+
+      </div>
+      </form>
+      <div id="rankingTable" class="w-3/4 p-6 flex justify-center items-center bg-gray-100 rounded-md shadow-md">
+      </div>
+
+      <!-- Time Series Section -->
+
+    </div>
+  </div>
+  </div>
+
+  <script type="module" src="../../js/yourSport.js"></script>
+</body>
+
+</html>

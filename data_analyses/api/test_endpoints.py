@@ -110,5 +110,5 @@ def test_get_sports_distance():
 # test_get_fairest_sports_2()
 # test_get_features_sport()
 # test_get_names_sport()
-# test_get_sports_for_user()
-test_get_sports_distance()
+test_get_sports_for_user()
+# test_get_sports_distance()
