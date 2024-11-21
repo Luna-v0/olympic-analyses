@@ -9,8 +9,7 @@ cd data_analyses
 python3 -m venv venv
 # For linux
 source venv/bin/activate
-# For windows
-venv\Scripts\activate
+# For windows venv\Scripts\activate
 
 # Mandatory
 pip install -r requirements.txt

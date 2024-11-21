@@ -37,10 +37,10 @@ def get_ic_and_df(agg_level:str):
     df = None,
     index_column = None
     if agg_level == "Sport":
-        df = pd.read_csv("../data/by_sport.csv")
+        df = pd.read_csv("data/by_sport.csv")
         index_column = SPORT
     elif agg_level == "Event":
-        df = pd.read_csv("../data/by_event.csv")
+        df = pd.read_csv("data/by_event.csv")
         index_column = EVENT
 
     return df, index_column
