@@ -1,10 +1,11 @@
-import numpy as np
-import pandas as pd
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Dict
 import json
 from sklearn.preprocessing import StandardScaler
+from typing import List
+import pandas as pd
+from scipy.stats import ks_2samp
+import numpy as np
 
 # Agg levels
 SPORT = "Sport"
@@ -44,21 +45,21 @@ def get_ic_and_df(agg_level:str):
 
     return df, index_column
 
+def filter_for_sex(df:pd.DataFrame, sex:str):
+    if sex == ANY: return df
+    return df[df["Sex"] == sex]
+
 # Isso aqui é pra quando vocês precisarem de qq dado de um esporte ou evento
 # agg_level = esporte ou evento
 @app.get("/api/getFeatures")
-def get_features(
+def get_features_agg(
         agg_level: str = Query(..., description="Aggregation level for the features. (Sport or event)"),
-        names: List[str] = Query(..., description="List of sports/event names.")
+        names: List[str] = Query(..., description="List of sports/event names."),
+        gender: str = Query(ANY, description="Gender")
 ) -> List[dict]:
-    if agg_level == "Sport":
-        index_column = "Sport"
-    elif agg_level == "Event":
-        index_column = "Event"
-    else:
-        return [{"error": "Invalid agg_level. Must be 'Sport' or 'Event'."}]
-
-    df = pd.read_csv("data/features.csv")
+    df, index_column = get_ic_and_df(agg_level)
+    if index_column is None: return []
+    df = filter_for_sex(df, gender)
     filtered_df = df[df[index_column].isin(names)]
     response = filtered_df.to_dict(orient="records")
 
@@ -67,18 +68,63 @@ def get_features(
 @app.get("/api/getNames")
 def get_names(
     agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
+    gender: str = Query(ANY, description="Gender")
+
 ) -> List[str]:
     df, index_column = get_ic_and_df(agg_level)
+    df = filter_for_sex(df, gender)
     if index_column is None: return []
     return df[index_column].tolist()
 
+
+# Isso pode ser preprocessado bem facilmente, se performance for um problema
 @app.get("/api/fairestSports")
 def get_fairest(
-        agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
+        agg_level: str = Query(..., description="Aggregation (Sport or Event) level for fairest sports."),
         gender: str = Query(..., description="Gender")
 ) -> List[dict]:
-    # Posso migrar o que já temos, mas acho que é retrabalho
-    pass
+    df = pd.read_csv("../data/features.csv")
+    global_dist = pd.read_csv("../data/global_distribution.csv")
+    df = filter_for_sex(df, gender)
+
+    features = ['Age', 'Height', 'BMI']
+
+    grouped = df.groupby(agg_level)
+
+    result = []
+
+    global_data = {}
+    for feature in features:
+        global_data[feature] = global_dist[feature].dropna()
+
+    # Distance collection for normalization
+    all_feature_distances = {feature: [] for feature in features}
+
+    for group_name, group_df in grouped:
+        group_result = {agg_level: group_name}
+        for feature in features:
+            group_feature_data = group_df[feature].dropna()
+
+            ks_statistic, _ = ks_2samp(group_feature_data, global_data[feature])
+            group_result[feature] = ks_statistic  # KS statistic as distance
+            all_feature_distances[feature].append(ks_statistic)  # Collect for normalization
+        result.append(group_result)
+
+    # Normalize feature distances
+    for feature in features:
+        max_distance = max(all_feature_distances[feature])
+        min_distance = min(all_feature_distances[feature])
+        if max_distance > 0:  # Avoid division by zero
+            for group in result:
+                group[feature] = (group[feature] - min_distance) / (max_distance - min_distance)
+
+    for group in result:
+        normalized_distances = [group[feature] for feature in features]
+        group['total'] = np.sqrt(np.sum(np.square(normalized_distances)))
+
+    result = sorted(result, key=lambda x: x['total'])
+
+    return result
 
 
 @app.get("/api/getSportsForUser")
@@ -99,9 +145,7 @@ def get_sports_for_user(
     user_gender = user_data.get("Sex")
     df = df[df['Sex'] == user_gender]
 
-    gdp_df = pd.read_csv('data/noc_gdp.csv')
-    
-    df = df.merge(gdp_df, on='NOC', how='left')
+    gdp_df = pd.read_csv('../data/noc_gdp.csv')
 
     feature_means = df[used_columns].mean()
     feature_stds = df[used_columns].std()
@@ -118,9 +162,13 @@ def get_sports_for_user(
 
     user_gdp = user_gdp_row.iloc[0]['GDP']
 
+    if 'Weight' not in user_data or 'Height' not in user_data:
+        return [{"error": "User weight and height are required to calculate BMI."}]
+    user_bmi = user_data['Weight'] / ((user_data['Height'] / 100) ** 2)
+
     user_row = {
         'Height': (user_data['Height'] - feature_means['Height']) / feature_stds['Height'],
-        'BMI': (user_data['BMI'] - feature_means['BMI']) / feature_stds['BMI'],
+        'BMI': (user_bmi - feature_means['BMI']) / feature_stds['BMI'],
         'Age': (user_data['Age'] - feature_means['Age']) / feature_stds['Age'],
         'GDP': (user_gdp - feature_means['GDP']) / feature_stds['GDP'],
         'Sex': user_data['Sex'],
@@ -146,10 +194,11 @@ def get_sports_for_user(
 @app.get("/api/getSportsDistance")
 def get_sports_distance(
         agg_level: str = Query(..., description="Aggregation level for sports distances."),
+        sex: str = Query(ANY, description="Gender"),
         features: List[str] = Query(..., description="List of features to calculate distances.")
 ) -> List[dict]:
     df, index_column = get_ic_and_df(agg_level)
-
+    df = filter_for_sex(df, sex)
     scaler = StandardScaler()
 
     df[features] = scaler.fit_transform(df[features])
@@ -171,19 +220,60 @@ def get_sports_distance(
 
 @app.get("/api/timeTendencies")
 def time_tendencies(
-        isSportsOrEvents: str = Query(..., description="string with either 'sports' or 'events'"),
-        feature: str = Query(..., description="tendency to analyze over time."),
-        sportsOrEvents: List[str] = Query([], description="List of Sports or events to analyze."),
+    isSportsOrEvents: str = Query(..., description="String with either 'sports' or 'events'"),
+    feature: str = Query(..., description="Feature to analyze over time."),
+    sportsOrEvents: List[str] = Query([], description="List of Sports or Events to analyze."),
 ) -> List[dict]:
-    print(sportsOrEvents)
-    print(isSportsOrEvents)
-    print(feature)
+    try:
+        df = pd.read_csv("../data/athlete_events.csv")
+    except FileNotFoundError:
+        return [{"error": "Data file not found."}]
+    except Exception as e:
+        return [{"error": f"Unexpected error while loading data: {str(e)}"}]
 
-    response = [
-        {"date": "2026", "lines": {"soccer": 25, "shootiing": 17}},
-        {"date": "2025", "lines": {"tennis": 20, "soccer": 10, "shootiing": 17}},
-        {"date": "2024", "lines": {"tennis": 25, "soccer": 30, "shootiing": 17}},
-        {"date": "2021", "lines": {"tennis": 10, "soccer": 20}},
-    ]
+    if feature not in df.columns:
+        return [{"error": f"Feature '{feature}' not found in data"}]
+
+    if isSportsOrEvents.lower() not in ['sports', 'events']:
+        return [{"error": "isSportsOrEvents must be either 'sports' or 'events'"}]
+
+    group_column = 'Sport' if isSportsOrEvents.lower() == 'sports' else 'Event'
+
+    if not sportsOrEvents:
+        sportsOrEvents = df[group_column].dropna().unique().tolist()
+
+    df_filtered = df[df[group_column].isin(sportsOrEvents)].copy()
+    df_filtered = df_filtered.dropna(subset=['Year', feature])
+
+    if df_filtered.empty:
+        return [{"error": "No data available for the given filters."}]
+
+    df_filtered['Year'] = df_filtered['Year'].astype(int).astype(str)
+
+    if pd.api.types.is_numeric_dtype(df_filtered[feature]):
+        df_grouped = df_filtered.groupby(['Year', group_column])[feature].mean().reset_index()
+    else:
+        df_grouped = df_filtered.groupby(['Year', group_column])[feature].agg(lambda x: x.mode().iloc[0]).reset_index()
+
+    if df_grouped.empty:
+        return [{"error": "No data after grouping and analysis."}]
+
+    df_pivot = df_grouped.pivot(index='Year', columns=group_column, values=feature)
+    if df_pivot.empty:
+        return [{"error": "No data after pivot transformation."}]
+
+    df_pivot.reset_index(inplace=True)
+
+    response = []
+    for _, row in df_pivot.iterrows():
+        date = row['Year']
+        lines = {}
+        for sport_or_event in sportsOrEvents:
+            if sport_or_event in df_pivot.columns:
+                value = row.get(sport_or_event)
+                if pd.notnull(value):
+                    lines[sport_or_event] = value
+        if lines:
+            response.append({"date": date, "lines": lines})
 
     return response
