@@ -44,6 +44,10 @@ def get_ic_and_df(agg_level:str):
 
     return df, index_column
 
+def filter_for_sex(df:pd.DataFrame, sex:str):
+    if sex == ANY: return df
+    return df[df["Sex"] == sex]
+
 # Isso aqui é pra quando vocês precisarem de qq dado de um esporte ou evento
 # agg_level = esporte ou evento
 @app.get("/api/getFeatures")
@@ -77,7 +81,6 @@ def get_fairest(
         agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
         gender: str = Query(..., description="Gender")
 ) -> List[dict]:
-    # Posso migrar o que já temos, mas acho que é retrabalho
     pass
 
 
@@ -145,10 +148,11 @@ def get_sports_for_user(
 @app.get("/api/getSportsDistance")
 def get_sports_distance(
         agg_level: str = Query(..., description="Aggregation level for sports distances."),
+        sex: str = Query(ANY, description="Gender"),
         features: List[str] = Query(..., description="List of features to calculate distances.")
 ) -> List[dict]:
     df, index_column = get_ic_and_df(agg_level)
-
+    df = filter_for_sex(df, sex)
     scaler = StandardScaler()
 
     df[features] = scaler.fit_transform(df[features])
