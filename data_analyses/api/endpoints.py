@@ -1,8 +1,8 @@
-from fastapi import FastAPI, Query
+from fastapi import FastAPI, Query, Body
 from fastapi.middleware.cors import CORSMiddleware
 import json
 from sklearn.preprocessing import StandardScaler
-from typing import List
+from typing import List, Dict, Union
 import pandas as pd
 from scipy.stats import ks_2samp
 import numpy as np
@@ -26,6 +26,23 @@ app.add_middleware(
     allow_methods=["*"],  # HTTP methods: GET, POST, PUT, etc.
     allow_headers=["*"],  # Headers like Content-Type, Authorization, etc.
 )
+
+# List of features for POST endpoints
+FEATURES = [
+    "Name", "Age", "Height", "Weight", "Team", "NOC", "Games", "Year", 
+    "City", "Sport", "Event", "Medal", "BMI"
+]
+
+# Helper function to load data
+def load_data():
+    try:
+        return pd.read_csv("../data/athlete_events.csv")
+    except FileNotFoundError:
+        return pd.DataFrame()  # Return empty DataFrame if file is not found
+
+# Helper function to save data
+def save_data(df):
+    df.to_csv("../data/athlete_events.csv", index=False)
 
 @app.get("/api")
 def read_root(data:str) -> dict:
@@ -289,3 +306,24 @@ def time_tendencies(
 
     return response
 
+# Generate POST endpoints dynamically
+for feature in FEATURES:
+    @app.post(f"/api/{feature}")
+    def update_feature(
+        new_data: Dict[str, Union[int, float, str]] = Body(..., description=f"New data for {feature}.")
+    ):
+        """
+        POST endpoint to update or insert data for the feature.
+        Expects a JSON object with a row of data for the given feature.
+        """
+        df = load_data()
+        
+        if df.empty:
+            # Initialize the DataFrame with the new data if file is empty
+            df = pd.DataFrame([new_data])
+        else:
+            # Append new data to the existing DataFrame
+            df = pd.concat([df, pd.DataFrame([new_data])], ignore_index=True)
+        
+        save_data(df)
+        return {"message": f"Data for {feature} has been successfully updated.", "new_data": new_data}
