@@ -58,6 +58,7 @@ def get_features_agg(
         gender: str = Query(ANY, description="Gender")
 ) -> List[dict]:
     df, index_column = get_ic_and_df(agg_level)
+    if index_column is None: return []
     df = filter_for_sex(df, gender)
     filtered_df = df[df[index_column].isin(names)]
     response = filtered_df.to_dict(orient="records")
@@ -67,18 +68,16 @@ def get_features_agg(
 @app.get("/api/getNames")
 def get_names(
     agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
+    gender: str = Query(ANY, description="Gender")
+
 ) -> List[str]:
     df, index_column = get_ic_and_df(agg_level)
+    df = filter_for_sex(df, gender)
     if index_column is None: return []
     return df[index_column].tolist()
 
 
-
-
 # Isso pode ser preprocessado bem facilmente, se performance for um problema
-
-
-
 @app.get("/api/fairestSports")
 def get_fairest(
         agg_level: str = Query(..., description="Aggregation (Sport or Event) level for fairest sports."),
