@@ -1,10 +1,11 @@
-import numpy as np
-import pandas as pd
 from fastapi import FastAPI, Query
 from fastapi.middleware.cors import CORSMiddleware
-from typing import List, Dict
 import json
 from sklearn.preprocessing import StandardScaler
+from typing import List
+import pandas as pd
+from scipy.stats import ks_2samp
+import numpy as np
 
 # Agg levels
 SPORT = "Sport"
@@ -76,12 +77,60 @@ def get_names(
     if index_column is None: return []
     return df[index_column].tolist()
 
+
+
+
+# Isso pode ser preprocessado bem facilmente, se performance for um problema
+
+
+
 @app.get("/api/fairestSports")
 def get_fairest(
-        agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
+        agg_level: str = Query(..., description="Aggregation (Sport or Event) level for fairest sports."),
         gender: str = Query(..., description="Gender")
 ) -> List[dict]:
-    pass
+    df = pd.read_csv("../data/features.csv")
+    global_dist = pd.read_csv("../data/global_distribution.csv")
+    df = filter_for_sex(df, gender)
+
+    features = ['Age', 'Height', 'BMI']
+
+    grouped = df.groupby(agg_level)
+
+    result = []
+
+    global_data = {}
+    for feature in features:
+        global_data[feature] = global_dist[feature].dropna()
+
+    # Distance collection for normalization
+    all_feature_distances = {feature: [] for feature in features}
+
+    for group_name, group_df in grouped:
+        group_result = {agg_level: group_name}
+        for feature in features:
+            group_feature_data = group_df[feature].dropna()
+
+            ks_statistic, _ = ks_2samp(group_feature_data, global_data[feature])
+            group_result[feature] = ks_statistic  # KS statistic as distance
+            all_feature_distances[feature].append(ks_statistic)  # Collect for normalization
+        result.append(group_result)
+
+    # Normalize feature distances
+    for feature in features:
+        max_distance = max(all_feature_distances[feature])
+        min_distance = min(all_feature_distances[feature])
+        if max_distance > 0:  # Avoid division by zero
+            for group in result:
+                group[feature] = (group[feature] - min_distance) / (max_distance - min_distance)
+
+    for group in result:
+        normalized_distances = [group[feature] for feature in features]
+        group['total'] = np.sqrt(np.sum(np.square(normalized_distances)))
+
+    result = sorted(result, key=lambda x: x['total'])
+
+    return result
 
 
 @app.get("/api/getSportsForUser")
