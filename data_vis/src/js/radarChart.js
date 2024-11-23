@@ -154,29 +154,6 @@ export function createRadarChart({
     .append("g")
     .attr("class", "radarWrapper");
 
-  // Append the backgrounds
-  blobWrapper
-    .append("path")
-    .attr("class", "radarArea")
-    .attr("d", (d) => radarLine(d.axes))
-    .style("fill", (d, i) => cfg.color(i))
-    .style("fill-opacity", cfg.opacityArea)
-    .on("mouseover", function (event, d) {
-      // Dim all blobs
-      d3.selectAll(".radarArea")
-        .transition()
-        .duration(200)
-        .style("fill-opacity", 0.1);
-      // Bring back the hovered blob
-      d3.select(this).transition().duration(200).style("fill-opacity", 0.7);
-    })
-    .on("mouseout", () => {
-      // Bring back all blobs
-      d3.selectAll(".radarArea")
-        .transition()
-        .duration(200)
-        .style("fill-opacity", cfg.opacityArea);
-    });
 
   // Create the outlines
   blobWrapper

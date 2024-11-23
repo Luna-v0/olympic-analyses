@@ -98,6 +98,7 @@ def get_names(
 @app.get("/api/fairestSports")
 def get_fairest(
         agg_level: str = Query("Sport", description="Aggregation (Sport or Event) level for fairest sports."),
+        names: List[str] = Query([], description="List of sports to be returned"),
         gender: str = Query("M", description="Gender")
 ) -> List[dict]:
     df = pd.read_csv("../data/features.csv")
@@ -140,8 +141,7 @@ def get_fairest(
         group['total'] = np.sqrt(np.sum(np.square(normalized_distances)))
 
     result = sorted(result, key=lambda x: x['total'])
-    print(result)
-    return result
+    return [x for x in result if x[agg_level] in names]
 
 
 @app.get("/api/getSportsForUser")

@@ -6,7 +6,8 @@ from endpoints import app  # Replace 'main' with the filename where your app ins
 client = TestClient(app)
 
 def test_get_fairest_sports():
-    response = client.get("/api/fairestSports", params={"agg_level": "Sport", "gender": "M"})
+    response = client.get("/api/fairestSports", params={"agg_level": "Sport", "gender": "M", "names": ["Football", "Basketball"],
+})
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)

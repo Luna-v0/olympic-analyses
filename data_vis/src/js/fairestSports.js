@@ -35,7 +35,7 @@ apiCall(
         h: 500,
         maxValue: maxValue,
         levels: 5,
-        roundStrokes: true,
+        roundStrokes: false,
         color: d3.scaleOrdinal().range(d3.schemeCategory10),
         format: '.2f', // Adjust format as needed
         unit: '',      // Add unit if applicable
