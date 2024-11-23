@@ -6,8 +6,10 @@ import numpy as np
 features_df = pd.read_csv("../data/features.csv")
 global_dist_df = pd.read_csv("../data/global_distribution.csv")
 
+sport = "Swimming"
+
 # Filter for Male and Shooting
-features_df = features_df[(features_df["Sex"] == "M") & (features_df["Sport"] == "Wrestling")]
+features_df = features_df[(features_df["Sex"] == "M") & (features_df["Sport"] == sport)]
 global_dist_df = global_dist_df[global_dist_df["Sex"] == "M"]
 
 # Features to compare
@@ -30,7 +32,7 @@ for i, feature in enumerate(features):
 
     # Plot histograms with density=True to normalize the areas
     axes[i].hist(global_dist_df[feature], bins=bins, alpha=0.5, label="Global Distribution", color='blue', density=True)
-    axes[i].hist(features_df[feature], bins=bins, alpha=0.5, label="Shooting Athletes", color='orange', density=True)
+    axes[i].hist(features_df[feature], bins=bins, alpha=0.5, label=f"{sport} Athletes", color='orange', density=True)
 
     # Set titles and labels
     axes[i].set_title(f'Distribution of {feature}')

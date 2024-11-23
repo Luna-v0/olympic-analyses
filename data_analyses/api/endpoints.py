@@ -97,8 +97,8 @@ def get_names(
 # Isso pode ser preprocessado bem facilmente, se performance for um problema
 @app.get("/api/fairestSports")
 def get_fairest(
-        agg_level: str = Query(..., description="Aggregation (Sport or Event) level for fairest sports."),
-        gender: str = Query(..., description="Gender")
+        agg_level: str = Query("Sport", description="Aggregation (Sport or Event) level for fairest sports."),
+        gender: str = Query("M", description="Gender")
 ) -> List[dict]:
     df = pd.read_csv("../data/features.csv")
     global_dist = pd.read_csv("../data/global_distribution.csv")
@@ -140,7 +140,7 @@ def get_fairest(
         group['total'] = np.sqrt(np.sum(np.square(normalized_distances)))
 
     result = sorted(result, key=lambda x: x['total'])
-
+    print(result)
     return result
 
 

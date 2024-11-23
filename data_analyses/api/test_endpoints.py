@@ -62,9 +62,9 @@ def test_get_names_sport():
 
 def test_get_sports_for_user():
     user_data = {
-        "Height": 194,
-        "BMI": 25.8,
-        "Age": 21,
+        "Height": 173,
+        "Weight": 103,
+        "Age": 24,
         "Sex": "M",
         "NOC": "BRA"
     }
@@ -106,9 +106,9 @@ def test_get_sports_distance():
     print(data)
 
 
-# test_get_fairest_sports()
+test_get_fairest_sports()
 # test_get_fairest_sports_2()
 # test_get_features_sport()
 # test_get_names_sport()
-test_get_sports_for_user()
+# test_get_sports_for_user()
 # test_get_sports_distance()
