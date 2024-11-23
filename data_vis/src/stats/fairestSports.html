@@ -44,7 +44,30 @@
   </style>
 </head>
 <body>
-  <!-- Your form and other content -->
+  <div>
+  <label for="aggLevel">Aggregation Level:</label>
+  <select id="aggLevel">
+    <option value="Sport">Sport</option>
+    <option value="Event">Event</option>
+  </select>
+</div>
+
+<div>
+  <label for="names">Select Sports/Events:</label>
+  <select id="names" multiple>
+    <!-- Options will be dynamically populated -->
+  </select>
+</div>
+
+<div>
+  <label for="gender">Gender:</label>
+  <select id="gender">
+    <option value="M">Male</option>
+    <option value="F">Female</option>
+  </select>
+</div>
+
+<button id="fetchData">Update Chart</button>
   <!-- Radar Chart Container -->
   <div id="radarChart"></div>
 </body>
