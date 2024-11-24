@@ -10,6 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 # Bundle app source
 
+WORKDIR /usr/src/app/api
+
 EXPOSE 8000
 
-CMD ["python", "api/run.py"]
+CMD ["python", "run.py"]

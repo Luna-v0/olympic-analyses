@@ -1,6 +1,7 @@
 import props from "./properties";
 import { setUpOptions, setupSingleSelect } from "./dropDown";
 import { createDropDictFromList, apiCall } from "./utils";
+import { generateTable } from "./tables";
 
 const options = createDropDictFromList(props.NOC);
 const sexOptions = createDropDictFromList(["M", "F"]);
@@ -49,7 +50,8 @@ document
         "http://localhost:8000/api/getSportsForUser"
       );
 
-      console.log(responseData);
+      generateTable("rankingTable", responseData, Object.keys(responseData[0]));
+
     } catch (error) {
       console.error("Error fetching data:", error);
       alert("An error occurred. Please try again.");
