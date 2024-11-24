@@ -1,13 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="../main.css" />
   <title>Home</title>
 </head>
-<body>
-  <h1 class="text-2xl font-bold">Home Page</h1>
-  <div id="hello_world"></div>
-  <script type="module" src="../js/index.js"></script>
+
+<body class="bg-gray-100 min-h-screen flex items-center justify-center">
+  <div class="max-w-4xl mx-auto p-4 text-center">
+    <h1 class="text-5xl font-bold text-gray-800 mb-12">
+      Olympic Analyses
+    </h1>
+    <div class="grid grid-cols-2 gap-8">
+      <a
+        href="/stats/fairestSports.html"
+        class="py-6 px-8 bg-blue-600 text-white text-2xl font-medium rounded-lg shadow-lg hover:bg-blue-700 transition-all text-center"
+      >
+        What are the <br>fairest sports?
+      </a>
+      <a
+        href="/stats/yourSport.html"
+        class="py-6 px-8 bg-green-600 text-white text-2xl font-medium rounded-lg shadow-lg hover:bg-green-700 transition-all text-center"
+      >
+        Find your <br> sport
+      </a>
+      <a
+        href="/stats/sportSimilarities.html"
+        class="py-6 px-8 bg-red-600 text-white text-2xl font-medium rounded-lg shadow-lg hover:bg-red-700 transition-all text-center"
+      >
+        What sports <br> are similar?
+      </a>
+      <a
+        href="/stats/timeTendencies.html"
+        class="py-6 px-8 bg-yellow-500 text-white text-2xl font-medium rounded-lg shadow-lg hover:bg-yellow-600 transition-all text-center"
+      >
+        How sports <br> have evolved
+      </a>
+    </div>
+  </div>
 </body>
+
 </html>
