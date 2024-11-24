@@ -70,8 +70,8 @@ document
 
     const requestData = {
       agg_level: checkBox.checked ? "event" : "sport",
-      sex: selectedSexCategory.toString(),
-      features: getSelectedItems().toString(),
+      sex: selectedSexCategory/*.toString()*/,
+      features: getSelectedItems()/*.toString()*/,
     };
 
     try {
