@@ -12,7 +12,8 @@ const properties = {
     Sport: props.Sport,
     Event: props.Event,
     Medal: props.Medal,
-    BMI: props.BMI
+    BMI: props.BMI,
+    GDP: props.GDP
 }
 
 properties.Properties = Object.keys(properties);

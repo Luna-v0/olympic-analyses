@@ -14,7 +14,7 @@ import { createLineChart } from "./timeSeries.js";
 
 const optionsFeatures = createDropDictFromList(
   props.Properties.filter((item) =>
-    ["Height", "BMI", "Age", "GDP"].includes(item)
+    ["Height", "Weight", "Age", "NOC", "Sex"].includes(item)
   )
 );
 
