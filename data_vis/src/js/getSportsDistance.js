@@ -1,21 +1,21 @@
 import props from "./properties";
-import { setUpOptions, setupSingleSelect } from "./dropDown";
+import { setUpOptions, setupSingleSelect, setupMultiSelect} from "./dropDown";
 import { createDropDictFromList, apiCall } from "./utils";
 import { generateTable } from "./tables";
 import { createParallelCoordinatesChart } from "./parallelCoords";
 
-const options = createDropDictFromList(props.Properties);
+const options = createDropDictFromList(props.NOC);
 const sexOptions = createDropDictFromList(["M", "F"]);
 
-const dropDownContainerId = "dropdown";
-const displaySingleContainerId = "selectedItemContainer1";
+const dropDownContainerId = "multiDropdown";
+const displaySingleContainerId = "selectedItemsContainer";
 const dropDownContainerId2 = "dropdown2";
 const displaySingleContainerId2 = "selectedItemContainer2";
 
 setUpOptions(dropDownContainerId, options);
 setUpOptions(dropDownContainerId2, sexOptions);
 
-const { getSelectedItem: getCountry } = setupSingleSelect(
+const { getSelectedItems: getFeatures } = setupMultiSelect(
   dropDownContainerId,
   displaySingleContainerId
 );
@@ -32,27 +32,23 @@ document
 
     const formData = new FormData(event.target);
     const data = Object.fromEntries(formData.entries());
-    const userData = {
-      NOC: getCountry(),
-      Age: Number(data.Age),
-      Height: Number(data.Height),
-      Weight: Number(data.Weight),
-      Sex: getSex(),
-    }
 
 
     const requestData = {
-      _user_data: JSON.stringify(userData),
       agg_level: "Sport",
+      sex: getSex(),
+      features: getFeatures(),
     };
 
     try {
       // Send data to backend
-      const [responseTableData, user_gdp] = await apiCall(
+      const responseTableData = await apiCall(
         requestData,
         "http://localhost:8000/api/getSportsForUser"
       );
+      console.log(responseTableData);
 
+      /*
       const responseChartData = await apiCall(
         {eventOrSport: "Sport", gender: userData.Sex},
         "http://localhost:8000/api/getSportsToCompareWithUser"
@@ -79,7 +75,8 @@ document
         "NOC",
         "GDP"
       ], userData, "Sport");
-      generateTable("rankingTable", responseTableData);
+      */
+      //generateTable("rankingTable", responseTableData);
     } catch (error) {
       console.error("Error fetching data:", error);
       alert("An error occurred. Please try again.");
