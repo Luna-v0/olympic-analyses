@@ -13,7 +13,8 @@ source venv/bin/activate
 
 # Mandatory
 pip install -r requirements.txt
-python3 api/run.py
+cd api
+python3 run.py
 ```
 
 ## Init Data Vis

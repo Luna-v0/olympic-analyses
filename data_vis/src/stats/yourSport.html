@@ -18,15 +18,34 @@
       <div class="w-1/4 p-6 bg-white rounded-md shadow-md">
         <form id="dataForm" class="space-y-4">
           <div>
-            <label for="Age" className="block text-sm font-medium text-gray-700">Age (in years):</label>
-            <input type="number" name="Age" className="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
-            </input>
-            <label for="Height" className="block text-sm font-medium text-gray-700">Height (in cm):</label>
-            <input type="number" name="Height" className="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
-            </input>
-            <label for="Weight" className="block text-sm font-medium text-gray-700">Weight (in kilograms):</label>
-            <input type="number" name="Weight" className="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
-            </input>
+            <div class="space-y-4">
+              <div>
+                <label for="Age" class="block text-sm font-medium text-gray-900">
+                  Age (in years):
+                </label>
+                <input type="number" name="Age" id="Age"
+                  class="mt-1 block w-full p-3 border border-gray-400 rounded-lg shadow-sm focus:border-blue-500 focus:ring focus:ring-blue-200 focus:ring-opacity-50"
+                  placeholder="Enter your age" />
+              </div>
+
+              <div>
+                <label for="Height" class="block text-sm font-medium text-gray-900">
+                  Height (in cm):
+                </label>
+                <input type="number" name="Height" id="Height"
+                  class="mt-1 block w-full p-3 border border-gray-400 rounded-lg shadow-sm focus:border-green-500 focus:ring focus:ring-green-200 focus:ring-opacity-50"
+                  placeholder="Enter your height" />
+              </div>
+
+              <div>
+                <label for="Weight" class="block text-sm font-medium text-gray-900">
+                  Weight (in kilograms):
+                </label>
+                <input type="number" name="Weight" id="Weight"
+                  class="mt-1 block w-full p-3 border border-gray-400 rounded-lg shadow-sm focus:border-purple-500 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
+                  placeholder="Enter your weight" />
+              </div>
+            </div>
 
             <label for="dropdown" class="block text-sm font-medium text-gray-700">Country</label>
             <select id="dropdown" name="Team" class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm">
@@ -48,13 +67,17 @@
 
       </div>
       </form>
-      <div id="rankingTable" class="w-3/4 p-6 flex justify-center items-center bg-gray-100 rounded-md shadow-md">
+      <div id="parallelCoords"
+        class="w-3/4 max-h-[70vh] p-6 flex justify-center items-center bg-gray-100 rounded-md shadow-md overflow-hidden">
       </div>
 
       <!-- Time Series Section -->
 
     </div>
   </div>
+  <div id="rankingTable"
+        class=" p-6 flex justify-center items-center bg-gray-100 rounded-md shadow-md mt-4 overflow-x-auto">
+      </div>
   </div>
 
   <script type="module" src="../../js/yourSport.js"></script>
