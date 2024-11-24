@@ -1,6 +1,7 @@
 import * as d3 from "d3";
 import { createRadarChart } from "./radarChart.js";
 import { apiCall } from "./utils.js";
+import { generateTable } from './tables.js'; // Assuming the generateTable function is in a separate file
 
 // Function to fetch available options for the names selector
 function fetchOptions(aggLevel, gender) {
@@ -17,6 +18,7 @@ function fetchOptions(aggLevel, gender) {
     })
     .catch((error) => console.error("Error fetching options:", error));
 }
+
 // Event listener for the aggregation level selector
 document.getElementById("aggLevel").addEventListener("change", () => {
   const aggLevel = document.getElementById("aggLevel").value;
@@ -31,7 +33,7 @@ document.getElementById("gender").addEventListener("change", () => {
   fetchOptions(aggLevel, gender);
 });
 
-// Fetch data and update the radar chart
+// Fetch data and update the radar chart and table
 document.getElementById("fetchData").addEventListener("click", () => {
   const aggLevel = document.getElementById("aggLevel").value;
   const names = Array.from(document.getElementById("names").selectedOptions).map(
@@ -41,7 +43,7 @@ document.getElementById("fetchData").addEventListener("click", () => {
   const namesQuery = names.map(name => `names=${encodeURIComponent(name)}`).join("&");
   const url = `http://localhost:8000/api/fairestSports?agg_level=${encodeURIComponent(aggLevel)}&${namesQuery}&gender=${encodeURIComponent(gender)}`;
 
-  // Fetch data and update the radar chart
+  // Fetch data
   apiCall("", url)
     .then((data) => {
       // Process data to fit radar chart format
@@ -79,6 +81,9 @@ document.getElementById("fetchData").addEventListener("click", () => {
           },
         },
       });
+
+      // Generate the table with the Name and total columns
+      generateTable('dataTableContainer', data, ['Name', 'total']);
     })
     .catch((error) => console.error("Error fetching data:", error));
 });

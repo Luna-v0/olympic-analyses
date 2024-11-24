@@ -56,11 +56,16 @@
         </button>
       </div>
 
-      <!-- Chart Section -->
-      <div class="w-full md:w-2/3 px-3 mt-8 md:mt-0">
+      <!-- Chart and Table Section -->
+      <div class="w-full md:w-2/3 px-3 mt-8 md:mt-0 flex flex-col md:flex-row">
         <!-- Radar Chart Container -->
-        <div id="radarChart">
+        <div id="radarChart" class="flex-1">
           <!-- The radar chart will be rendered here -->
+        </div>
+
+        <!-- Table Container -->
+        <div id="dataTableContainer" class="flex-1 ml-4 overflow-x-auto">
+          <!-- The table will be dynamically generated here -->
         </div>
       </div>
     </div>
