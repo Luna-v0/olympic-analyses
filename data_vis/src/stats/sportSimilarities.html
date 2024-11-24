@@ -22,21 +22,9 @@
               type="checkbox"
               class="mt-1 block"
             />
-            <div>
-              <label for="dropdown" class="block text-sm font-medium text-gray-700">Comparing</label>
-              <select
-                id="dropdown"
-                name="sportOrEvent"
-                class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm"
-              >
-              </select>
-            </div>
 
-            <div id="selectedItemContainer1" class="mt-4 p-4 border rounded-md bg-gray-50">
-              <p class="text-sm font-medium text-gray-700">Item</p>
-            </div>
             <div>
-              <label for="multiDropdown" class="block text-sm font-medium text-gray-700">With</label>
+              <label for="multiDropdown" class="block text-sm font-medium text-gray-700">Considering</label>
               <select
                 id="multiDropdown"
                 name="multiDropdown"
@@ -49,6 +37,18 @@
             <div id="selectedItemsContainer" class="mt-4 p-4 border rounded-md bg-gray-50">
               <p class="text-sm font-medium text-gray-700">Selected:</p>
               <ul id="selectedItemsList" class="mt-2 space-y-2"></ul>
+            </div>
+
+            <div class="flex items-center">
+              <div class="flex items-center">
+                <input id="M" name="sexCategory" type="radio" class="h-4o w-4 text-blue-600">
+                <label for="M" class="ml-2 text-sm">Male</label>
+              </div>
+              <div class="mx-4"></div> <!-- Espaço estilo "tab" -->
+              <div class="flex items-center">
+                <input id="F" name="sexCategory" type="radio" class="h-4 w-4 text-blue-600">
+                <label for="F" class="ml-2 text-sm">Female</label>
+              </div>
             </div>
 
             <button
