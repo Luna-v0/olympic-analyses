@@ -144,21 +144,24 @@ def get_fairest(
     return result
 
 @app.get("/api/getSportsToCompareWithUser")
-def generateAvarage(eventOrSport:str):
+def generateAvarage(eventOrSport:str, gender:str):
     eventOrSport = eventOrSport.lower()
     #if starts with event
     if eventOrSport.startswith("event"):
         df = pd.read_csv("../data/yourEvents.csv")
     else:
         df = pd.read_csv("../data/yourSports.csv")
-        
+    
+    df = df[df['Sex'] == gender]
+    df = df.drop(columns=['Sex'])
+    print(df.columns)
     return df.to_dict('records')
 
 @app.get("/api/getSportsForUser")
 def get_sports_for_user(
     _user_data: str = Query(..., description="User data for retrieving sports."),
     agg_level: str = Query(..., description="Aggregation (Sport or event) level for fairest sports."),
-) -> List[dict]:
+) -> List:
     try:
         user_data = json.loads(_user_data)
     except json.JSONDecodeError:
@@ -214,7 +217,7 @@ def get_sports_for_user(
     df = df[df[index_column] != "User"]
 
     result = df[[index_column, 'Distance']].sort_values(by='Distance').to_dict(orient='records')
-    return result
+    return [result, user_gdp]
 
 
 

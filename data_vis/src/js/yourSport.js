@@ -48,23 +48,37 @@ document
 
     try {
       // Send data to backend
-      const responseTableData = await apiCall(
+      const [responseTableData, user_gdp] = await apiCall(
         requestData,
         "http://localhost:8000/api/getSportsForUser"
       );
 
       const responseChartData = await apiCall(
-        {eventOrSport: "Sport"},
+        {eventOrSport: "Sport", gender: userData.Sex},
         "http://localhost:8000/api/getSportsToCompareWithUser"
       );
+      userData.GDP = user_gdp;
+
+      const alpha = 5;
+      const maxDistance = Math.max(...responseTableData.map((row) => row.Distance));
+      const minDistance = Math.min(...responseTableData.map((row) => row.Distance));
+      responseTableData.forEach((row) => {
+        responseChartData.forEach((sport) => {
+          console.log(row.Sport, sport.Sport);
+          if (row.Sport === sport.Sport) {
+            const normalized = (row.Distance - minDistance) / (maxDistance - minDistance);
+            sport.opacity = (Math.exp(alpha * normalized) - 1) / (Math.exp(alpha) - 1)
+          }
+        });
+      });
 
       createParallelCoordinatesChart("parallelCoords", responseChartData,[
         "Age",
         "Height",
         "Weight",
         "NOC",
-        "Sex"
-      ], userData);
+        "GDP"
+      ], userData, "Sport");
       generateTable("rankingTable", responseTableData);
     } catch (error) {
       console.error("Error fetching data:", error);
