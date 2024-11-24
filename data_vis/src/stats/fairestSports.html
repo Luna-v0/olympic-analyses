@@ -1,0 +1,74 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Radar Chart Example</title>
+  <!-- Include Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Include D3.js -->
+  <script type="module" src="../js/fairestSports.js"></script>
+  <!-- Custom Tooltip Styles -->
+  <style>
+    /* Tailwind doesn't support all CSS properties directly for dynamic elements like tooltips */
+    .tooltip {
+      position: absolute;
+      text-align: center;
+      padding: 6px;
+      font: 12px sans-serif;
+      background: lightsteelblue;
+      border: 0;
+      border-radius: 8px;
+      pointer-events: none;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-800">
+  <div class="container mx-auto p-6">
+    <div class="flex flex-wrap -mx-3">
+      <!-- Form Section -->
+      <div class="w-full md:w-1/3 px-3">
+        <div class="mb-6">
+          <label for="aggLevel" class="block text-sm font-medium text-gray-700 mb-1">Aggregation Level:</label>
+          <select id="aggLevel" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="Sport">Sport</option>
+            <option value="Event">Event</option>
+          </select>
+        </div>
+
+        <div class="mb-6">
+          <label for="names" class="block text-sm font-medium text-gray-700 mb-1">Select Sports/Events:</label>
+              <select id="names" multiple size="16" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <!-- Options will be dynamically populated -->
+          </select>
+        </div>
+
+        <div class="mb-6">
+          <label for="gender" class="block text-sm font-medium text-gray-700 mb-1">Gender:</label>
+          <select id="gender" class="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+            <option value="M">Male</option>
+            <option value="F">Female</option>
+          </select>
+        </div>
+
+        <button id="fetchData" class="w-full px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+          Update Chart
+        </button>
+      </div>
+
+      <!-- Chart and Table Section -->
+      <div class="w-full md:w-2/3 px-3 mt-8 md:mt-0 flex flex-col md:flex-row">
+        <!-- Radar Chart Container -->
+        <div id="radarChart" class="flex-1">
+          <!-- The radar chart will be rendered here -->
+        </div>
+
+        <!-- Table Container -->
+        <div id="dataTableContainer" class="flex-1 ml-4 overflow-x-auto">
+          <!-- The table will be dynamically generated here -->
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

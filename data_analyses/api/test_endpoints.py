@@ -6,13 +6,14 @@ from endpoints import app  # Replace 'main' with the filename where your app ins
 client = TestClient(app)
 
 def test_get_fairest_sports():
-    response = client.get("/api/fairestSports", params={"agg_level": "Sport", "gender": "M"})
+    response = client.get("/api/fairestSports", params={"agg_level": "Sport", "gender": "M", "names": ["Football", "Basketball"],
+})
     assert response.status_code == 200
     data = response.json()
     assert isinstance(data, list)
     assert all(isinstance(item, dict) for item in data)
     for item in data:
-        assert "Sport" in item
+        assert "Name" in item
         assert "total" in item
     print(data)
 
@@ -62,9 +63,9 @@ def test_get_names_sport():
 
 def test_get_sports_for_user():
     user_data = {
-        "Height": 194,
-        "BMI": 25.8,
-        "Age": 21,
+        "Height": 173,
+        "Weight": 103,
+        "Age": 24,
         "Sex": "M",
         "NOC": "BRA"
     }
@@ -106,9 +107,9 @@ def test_get_sports_distance():
     print(data)
 
 
-# test_get_fairest_sports()
+test_get_fairest_sports()
 # test_get_fairest_sports_2()
 # test_get_features_sport()
 # test_get_names_sport()
-test_get_sports_for_user()
+# test_get_sports_for_user()
 # test_get_sports_distance()

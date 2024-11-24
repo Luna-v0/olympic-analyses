@@ -97,8 +97,9 @@ def get_names(
 # Isso pode ser preprocessado bem facilmente, se performance for um problema
 @app.get("/api/fairestSports")
 def get_fairest(
-        agg_level: str = Query(..., description="Aggregation (Sport or Event) level for fairest sports."),
-        gender: str = Query(..., description="Gender")
+        agg_level: str = Query("Sport", description="Aggregation (Sport or Event) level for fairest sports."),
+        names: List[str] = Query([], description="List of sports to be returned"),
+        gender: str = Query("M", description="Gender")
 ) -> List[dict]:
     df = pd.read_csv("../data/features.csv")
     global_dist = pd.read_csv("../data/global_distribution.csv")
@@ -118,7 +119,7 @@ def get_fairest(
     all_feature_distances = {feature: [] for feature in features}
 
     for group_name, group_df in grouped:
-        group_result = {agg_level: group_name}
+        group_result = {"Name": group_name}
         for feature in features:
             group_feature_data = group_df[feature].dropna()
 
@@ -134,14 +135,15 @@ def get_fairest(
         if max_distance > 0:  # Avoid division by zero
             for group in result:
                 group[feature] = (group[feature] - min_distance) / (max_distance - min_distance)
+                group[feature] = 1 - group[feature]
 
     for group in result:
         normalized_distances = [group[feature] for feature in features]
-        group['total'] = np.sqrt(np.sum(np.square(normalized_distances)))
+        group['total'] = round(np.sqrt(np.sum(np.square(normalized_distances))), 3)
 
     result = sorted(result, key=lambda x: x['total'])
-
-    return result
+    to_return = [x for x in result if x['Name'] in names]
+    return to_return
 
 @app.get("/api/getSportsToCompareWithUser")
 def generateAvarage(eventOrSport:str, gender:str):

@@ -12,7 +12,8 @@ export default defineConfig({
       input: {
         main: resolve(__dirname, "src/index.html"),
         about: resolve(__dirname, "src/about.html"),
-        fairSport: resolve(__dirname, "src/stats/timeTendencies.html"),
+        timeTendencies: resolve(__dirname, "src/stats/timeTendencies.html"),
+        fairSport: resolve(__dirname, "src/stats/fairestSports.html"),
         yourSport: resolve(__dirname, "src/stats/yourSport.html"),
       },
     },

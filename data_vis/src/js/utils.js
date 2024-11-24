@@ -1,6 +1,7 @@
 import axios from "axios";
 
 export async function apiCall(parameters, endpoint) {
+  console.log("Request URL:", endpoint); // Debugging line
   for (const [key, value] of Object.entries(parameters)) {
     if (!Array.isArray(value) && typeof value === "object") {
       parameters[key] = JSON.stringify(value);

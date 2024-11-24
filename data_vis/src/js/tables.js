@@ -6,6 +6,7 @@
  */
 export function generateTable(containerId, data, columns=Object.keys(data[0])) {
     const container = document.getElementById(containerId);
+
   
     // Clear previous content
     container.innerHTML = '';
@@ -13,12 +14,12 @@ export function generateTable(containerId, data, columns=Object.keys(data[0])) {
     // Create the table
     const table = document.createElement('table');
     table.className = 'min-w-full border-collapse border border-gray-300';
-  
+ 
     // Create the table header
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     headerRow.className = 'bg-gray-200';
-  
+
     columns.forEach(column => {
       const th = document.createElement('th');
       th.textContent = column;
@@ -34,7 +35,7 @@ export function generateTable(containerId, data, columns=Object.keys(data[0])) {
     data.forEach(row => {
       const tr = document.createElement('tr');
       tr.className = 'hover:bg-gray-100';
-  
+
       columns.forEach(column => {
         const td = document.createElement('td');
         td.textContent = row[column] || ''; // Use empty string if value is undefined
@@ -51,3 +52,11 @@ export function generateTable(containerId, data, columns=Object.keys(data[0])) {
     container.appendChild(table);
   }
   
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+
+    // Append the table to the container
+    container.appendChild(table);
+  }
