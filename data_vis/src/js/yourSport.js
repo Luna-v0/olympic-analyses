@@ -4,7 +4,7 @@ import { createDropDictFromList, apiCall } from "./utils";
 import { generateTable } from "./tables";
 import { createParallelCoordinatesChart } from "./parallelCoords";
 
-const options = createDropDictFromList(props.Properties);
+const options = createDropDictFromList(props.NOC);
 const sexOptions = createDropDictFromList(["M", "F"]);
 
 const dropDownContainerId = "dropdown";
