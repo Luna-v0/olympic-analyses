@@ -143,6 +143,16 @@ def get_fairest(
 
     return result
 
+@app.get("/api/getSportsToCompareWithUser")
+def generateAvarage(eventOrSport:str):
+    eventOrSport = eventOrSport.lower()
+    #if starts with event
+    if eventOrSport.startswith("event"):
+        df = pd.read_csv("../data/yourEvents.csv")
+    else:
+        df = pd.read_csv("../data/yourSports.csv")
+        
+    return df.to_dict('records')
 
 @app.get("/api/getSportsForUser")
 def get_sports_for_user(
