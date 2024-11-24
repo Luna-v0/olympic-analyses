@@ -67,7 +67,7 @@ document.getElementById("fetchData").addEventListener("click", () => {
         options: {
           w: 500,
           h: 500,
-          maxValue: maxValue,
+          maxValue: 1.0,
           levels: 5,
           roundStrokes: true,
           color: d3.scaleOrdinal().range(d3.schemeCategory10), // Add color back

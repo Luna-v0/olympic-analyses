@@ -120,20 +120,27 @@ export function createRadarChart({
     .style("stroke-width", "2px");
 
   // Append the labels at each axis
-  axis
-    .append("text")
-    .attr("class", "legend")
-    .style("font-size", "11px")
-    .attr("text-anchor", "middle")
-    .attr("dy", "0.35em")
-    .attr("x", (d, i) =>
-      rScale(maxValue * cfg.labelFactor) * Math.cos(angleSlice * i - Math.PI / 2)
-    )
-    .attr("y", (d, i) =>
-      rScale(maxValue * cfg.labelFactor) * Math.sin(angleSlice * i - Math.PI / 2)
-    )
-    .text((d) => d)
-    .call(wrap, cfg.wrapWidth);
+  // Append the labels at each axis
+axis
+  .append("text")
+  .attr("class", "legend")
+  .style("font-size", "11px")
+  .attr("text-anchor", "middle")
+  .attr("dy", (d, i) => {
+    // Adjust vertical alignment based on axis position
+    if (i === 0) return "-53em"; // Top axis
+    if (i === total / 2) return "1em"; // Bottom axis
+    return "0.35em";
+  })
+  .attr("x", (d, i) =>
+    rScale(maxValue * cfg.labelFactor) * Math.cos(angleSlice * i - Math.PI / 2)
+  )
+  .attr("y", (d, i) =>
+    rScale(maxValue * cfg.labelFactor) * Math.sin(angleSlice * i - Math.PI / 2)
+  )
+  .text((d) => d)
+  .call(wrap, cfg.wrapWidth);
+
 
   // The radial line function
   const radarLine = d3
