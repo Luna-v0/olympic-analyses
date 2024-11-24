@@ -119,7 +119,7 @@ def get_fairest(
     all_feature_distances = {feature: [] for feature in features}
 
     for group_name, group_df in grouped:
-        group_result = {agg_level: group_name}
+        group_result = {"Name": group_name}
         for feature in features:
             group_feature_data = group_df[feature].dropna()
 
@@ -135,13 +135,16 @@ def get_fairest(
         if max_distance > 0:  # Avoid division by zero
             for group in result:
                 group[feature] = (group[feature] - min_distance) / (max_distance - min_distance)
+                group[feature] = 1 - group[feature]
 
     for group in result:
         normalized_distances = [group[feature] for feature in features]
         group['total'] = np.sqrt(np.sum(np.square(normalized_distances)))
 
     result = sorted(result, key=lambda x: x['total'])
-    return [x for x in result if x[agg_level] in names]
+    to_return = [x for x in result if x['Name'] in names]
+    print(to_return, agg_level, names)
+    return to_return
 
 
 @app.get("/api/getSportsForUser")

@@ -13,7 +13,7 @@ def test_get_fairest_sports():
     assert isinstance(data, list)
     assert all(isinstance(item, dict) for item in data)
     for item in data:
-        assert "Sport" in item
+        assert "Name" in item
         assert "total" in item
     print(data)
 

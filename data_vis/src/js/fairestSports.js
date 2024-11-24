@@ -38,17 +38,17 @@ document.getElementById("fetchData").addEventListener("click", () => {
     (opt) => opt.value
   );
   const gender = document.getElementById("gender").value;
+  const namesQuery = names.map(name => `names=${encodeURIComponent(name)}`).join("&");
+  const url = `http://localhost:8000/api/fairestSports?agg_level=${encodeURIComponent(aggLevel)}&${namesQuery}&gender=${encodeURIComponent(gender)}`;
 
-  apiCall(
-    "",
-    `http://localhost:8000/api/fairestSports?agg_level=${aggLevel}&names=${names.join(",")}&gender=${gender}`
-  )
+  // Fetch data and update the radar chart
+  apiCall("", url)
     .then((data) => {
       // Process data to fit radar chart format
       const radarData = data.map((d) => ({
-        name: d.Sport,
+        name: d.Name,
         axes: Object.keys(d)
-          .filter((key) => key !== "Sport" && key !== "total")
+          .filter((key) => key !== "Name" && key !== "total")
           .map((key) => ({
             axis: key,
             value: d[key],
@@ -69,7 +69,7 @@ document.getElementById("fetchData").addEventListener("click", () => {
           h: 500,
           maxValue: maxValue,
           levels: 5,
-          roundStrokes: false,
+          roundStrokes: true,
           color: d3.scaleOrdinal().range(d3.schemeCategory10), // Add color back
           format: ".2f",
           unit: "",
