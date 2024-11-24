@@ -50,8 +50,7 @@ document
         "http://localhost:8000/api/getSportsForUser"
       );
 
-      generateTable("rankingTable", responseData, Object.keys(responseData[0]));
-
+      generateTable("rankingTable", responseData);
     } catch (error) {
       console.error("Error fetching data:", error);
       alert("An error occurred. Please try again.");

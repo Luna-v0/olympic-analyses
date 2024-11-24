@@ -4,7 +4,7 @@
  * @param {Array<Object>} data - The array of objects representing table rows.
  * @param {Array<string>} columns - The array of column names to display.
  */
-export function generateTable(containerId, data, columns) {
+export function generateTable(containerId, data, columns=Object.keys(data[0])) {
     const container = document.getElementById(containerId);
   
     // Clear previous content
