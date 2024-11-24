@@ -139,11 +139,10 @@ def get_fairest(
 
     for group in result:
         normalized_distances = [group[feature] for feature in features]
-        group['total'] = np.sqrt(np.sum(np.square(normalized_distances)))
+        group['total'] = round(np.sqrt(np.sum(np.square(normalized_distances))), 3)
 
     result = sorted(result, key=lambda x: x['total'])
     to_return = [x for x in result if x['Name'] in names]
-    print(to_return, agg_level, names)
     return to_return
 
 

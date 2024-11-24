@@ -57,11 +57,6 @@ document.getElementById("fetchData").addEventListener("click", () => {
           })),
       }));
 
-      // Set the maximum value for scaling
-      const maxValue = d3.max(radarData, (d) =>
-        d3.max(d.axes, (o) => o.value)
-      );
-
       // Draw the radar chart
       createRadarChart({
         selector: "#radarChart",

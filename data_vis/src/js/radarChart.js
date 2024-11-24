@@ -5,7 +5,7 @@ export function createRadarChart({
   selector,
   data,
   options = {},
-  margin = { top: 50, right: 80, bottom: 50, left: 80 },
+  margin = { top: 80, right: 80, bottom: 50, left: 80 },
 }) {
   const cfg = {
     w: 600, // Width of the circle
@@ -126,12 +126,7 @@ axis
   .attr("class", "legend")
   .style("font-size", "11px")
   .attr("text-anchor", "middle")
-  .attr("dy", (d, i) => {
-    // Adjust vertical alignment based on axis position
-    if (i === 0) return "-53em"; // Top axis
-    if (i === total / 2) return "1em"; // Bottom axis
-    return "0.35em";
-  })
+  .attr("dy", "0.35em") // Set consistent vertical alignment
   .attr("x", (d, i) =>
     rScale(maxValue * cfg.labelFactor) * Math.cos(angleSlice * i - Math.PI / 2)
   )
