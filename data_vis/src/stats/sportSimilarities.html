@@ -3,77 +3,96 @@
   <head>
     <meta charset="UTF-8" />
     <link rel="stylesheet" href="../main.css" />
-
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>About</title>
+    <style>
+      .container {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1rem;
+      }
+      .form-container {
+        flex: 1;
+        max-width: 400px;
+      }
+      .chart-container {
+        flex: 2;
+      }
+      #parallelCoords {
+        border: 1px solid #ddd;
+        border-radius: 4px;
+      }
+    </style>
   </head>
   <body>
-    <div class="w-1/4 p-6 bg-white rounded-md shadow-md">
-  <form id="dataForm" class="space-y-4">
-    <label for="toggleCheckbox" class="block text-sm font-medium text-gray-700">
-      Use Event instead of Sport?
-    </label>
-    <input
-      id="toggleCheckbox"
-      type="checkbox"
-      class="mt-1 block"
-    />
+    <div class="container p-6">
+      <!-- Form Container -->
+      <div class="form-container bg-white rounded-md shadow-md p-6">
+        <form id="dataForm" class="space-y-4">
+          <label for="toggleCheckbox" class="block text-sm font-medium text-gray-700">
+            Use Event instead of Sport?
+          </label>
+          <input id="toggleCheckbox" type="checkbox" class="mt-1 block" />
 
-    <div>
-      <label for="multiDropdown" class="block text-sm font-medium text-gray-700">Considering</label>
-      <select
-        id="multiDropdown"
-        name="multiDropdown"
-        multiple
-        class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm h-32"
-      >
-      </select>
-    </div>
+          <div>
+            <label for="multiDropdown" class="block text-sm font-medium text-gray-700">Considering</label>
+            <select
+              id="multiDropdown"
+              name="multiDropdown"
+              multiple
+              class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm h-32"
+            ></select>
+          </div>
 
-    <div id="selectedItemsContainer" class="mt-4 p-4 border rounded-md bg-gray-50">
-      <p class="text-sm font-medium text-gray-700">Selected:</p>
-      <ul id="selectedItemsList" class="mt-2 space-y-2"></ul>
-    </div>
+          <div id="selectedItemsContainer" class="mt-4 p-4 border rounded-md bg-gray-50">
+            <p class="text-sm font-medium text-gray-700">Selected:</p>
+            <ul id="selectedItemsList" class="mt-2 space-y-2"></ul>
+          </div>
 
-    <div>
-      <label for="highlightSport" class="block text-sm font-medium text-gray-700">Highlight Sport</label>
-      <select
-        id="highlightSport"
-        name="highlightSport"
-        class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm"
-      >
-        <option value="soccer">Soccer</option>
-        <option value="basketball">Basketball</option>
-        <option value="tennis">Tennis</option>
-        <option value="baseball">Baseball</option>
-        <!-- Add more sports as needed -->
-      </select>
-    </div>
+          <div>
+            <label for="highlightSport" class="block text-sm font-medium text-gray-700">Highlight Sport</label>
+            <select
+              id="highlightSport"
+              name="highlightSport"
+              class="mt-1 block w-full p-2 border-gray-300 rounded-md shadow-sm"
+            >
+              <option value="soccer">Soccer</option>
+              <option value="basketball">Basketball</option>
+              <option value="tennis">Tennis</option>
+              <option value="baseball">Baseball</option>
+              <!-- Add more sports as needed -->
+            </select>
+          </div>
 
-    <div class="flex items-center">
-      <div class="flex items-center">
-        <input id="M" name="sexCategory" type="radio" class="h-4 w-4 text-blue-600">
-        <label for="M" class="ml-2 text-sm">Male</label>
+          <div class="flex items-center">
+            <div class="flex items-center">
+              <input id="M" name="sexCategory" type="radio" class="h-4 w-4 text-blue-600" />
+              <label for="M" class="ml-2 text-sm">Male</label>
+            </div>
+            <div class="mx-4"></div>
+            <!-- Spacer for "tab" style -->
+            <div class="flex items-center">
+              <input id="F" name="sexCategory" type="radio" class="h-4 w-4 text-blue-600" />
+              <label for="F" class="ml-2 text-sm">Female</label>
+            </div>
+          </div>
+
+          <button
+            type="submit"
+            class="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          >
+            Submit
+          </button>
+        </form>
       </div>
-      <div class="mx-4"></div> <!-- Espaço estilo "tab" -->
-      <div class="flex items-center">
-        <input id="F" name="sexCategory" type="radio" class="h-4 w-4 text-blue-600">
-        <label for="F" class="ml-2 text-sm">Female</label>
+
+      <!-- Chart Container -->
+      <div class="chart-container">
+        <div id="parallelCoords" class="w-full h-[400px]"></div>
       </div>
     </div>
-
-    <button
-      type="submit"
-      class="w-full p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
-    >
-      Submit
-    </button>
-  </form>
-</div>
-
 
     <script type="module" src="../../js/sportSimilarities.js"></script>
   </body>
 </html>
-
-Add a selector for which sport to highlight
