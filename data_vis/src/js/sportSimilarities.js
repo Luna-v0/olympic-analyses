@@ -1,4 +1,4 @@
-  import {
+import {
   createDropDictFromList,
   apiCall,
   generateRandomColors,
@@ -80,8 +80,8 @@ document
 
     const requestData = {
       agg_level: checkBox.checked ? "Event" : "Sport",
-      sex: selectedSexCategory/*.toString()*/,
-      features: getSelectedItems()/*.toString()*/,
+      sex: selectedSexCategory /*.toString()*/,
+      features: getSelectedItems() /*.toString()*/,
     };
 
     try {
@@ -93,15 +93,16 @@ document
 
       // Usar a resposta para plotar com D3
 
-      console.log(responseData)
+      console.log(responseData);
       createLineChart({
         selector: "#timeSeries",
         data: responseData,
         lineColors: generateRandomColors(responseData),
       });
+
+      generateTable("rankingTable", responseData);
     } catch (error) {
       console.error("Error fetching data:", error);
       alert("An error occurred. Please try again.");
     }
-
   });
