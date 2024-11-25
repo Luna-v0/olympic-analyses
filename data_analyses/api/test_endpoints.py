@@ -107,7 +107,35 @@ def test_get_sports_distance():
     print(data)
 
 
-test_get_fairest_sports()
+def test_get_time_tendencies():
+    # Define parameters for the request
+    params = {
+        "isSportsOrEvents": "sports",  # Replace with a valid value
+        "feature": "Height",  # Replace with a valid feature
+        "sportsOrEvents": ["Football", "Basketball"]  # Replace with valid sports/events
+    }
+
+    # Send GET request with parameters
+    response = client.get("/api/timeTendencies", params=params)
+
+    # Assertions to verify the response
+    assert response.status_code == 200, "Expected status code 200"
+    data = response.json()
+    assert isinstance(data, list), "Response data should be a list"
+    assert all(isinstance(item, dict) for item in data), "Each item in the response should be a dictionary"
+
+    # Validate that expected keys are present in each item
+    for item in data:
+        assert "date" in item, "Each item should contain 'Time' key"
+        assert "lines" in item, "Each item should contain 'Value' key"
+
+    # Print the data for debugging
+    print(data)
+
+
+# Run the test
+test_get_time_tendencies()
+# test_get_fairest_sports()
 # test_get_fairest_sports_2()
 # test_get_features_sport()
 # test_get_names_sport()

@@ -76,7 +76,6 @@ document
         "Age",
         "Height",
         "Weight",
-        "NOC",
         "GDP"
       ], userData, "Sport");
       generateTable("rankingTable", responseTableData);

@@ -80,7 +80,7 @@ def get_features_agg(
     filtered_df = df[df[index_column].isin(names)]
     response = filtered_df.to_dict(orient="records")
 
-    return response
+    return sorted(response)
 
 @app.get("/api/getNames")
 def get_names(
@@ -91,7 +91,7 @@ def get_names(
     df, index_column = get_ic_and_df(agg_level)
     df = filter_for_sex(df, gender)
     if index_column is None: return []
-    return df[index_column].tolist()
+    return sorted(df[index_column].tolist())
 
 
 # Isso pode ser preprocessado bem facilmente, se performance for um problema
@@ -146,7 +146,7 @@ def get_fairest(
     return to_return
 
 @app.get("/api/getSportsToCompareWithUser")
-def generateAvarage(eventOrSport:str, gender:str):
+def generateAverage(eventOrSport:str, gender:str):
     eventOrSport = eventOrSport.lower()
     #if starts with event
     if eventOrSport.startswith("event"):
@@ -225,10 +225,11 @@ def get_sports_for_user(
 
 @app.get("/api/getSportsDistance")
 def get_sports_distance(
-        agg_level: str = Query(..., description="Aggregation level for sports distances."),
+        agg_level: str = Query('Sport' , description="Aggregation level for sports distances."),
         sex: str = Query(ANY, description="Gender"),
-        features: List[str] = Query(..., description="List of features to calculate distances.")
+        features: List[str] = Query(['Height', 'Weight', 'Age', 'GDP'], description="List of features to calculate distances.")
 ) -> List[dict]:
+    print(agg_level, sex, features)
     df, index_column = get_ic_and_df(agg_level)
     df = filter_for_sex(df, sex)
     scaler = StandardScaler()
@@ -250,12 +251,13 @@ def get_sports_distance(
     sorted_distances = sorted(distances, key=lambda x: x["Distance"])
     return sorted_distances
 
-@app.post("/api/timeTendencies")
+@app.get("/api/timeTendencies")
 def time_tendencies(
-    isSportsOrEvents: str = Body(..., description="String com 'sports' ou 'events'"),
-    feature: str = Body(..., description="Feature a ser analisada ao longo do tempo."),
-    sportsOrEvents: List[str] = Body(..., description="Lista de Esportes ou Eventos a serem analisados."),
+    isSportsOrEvents: str = Query("sports", description="String with either 'sports' or 'events'"),
+    feature: str = Query("Height", description="Feature to analyze over time."),
+    sportsOrEvents: List[str] = Query([], description="List of Sports or Events to analyze."),
 ) -> List[dict]:
+    print(isSportsOrEvents, feature, sportsOrEvents)
     try:
         df = pd.read_csv("../data/athlete_events.csv")
     except FileNotFoundError:
@@ -282,8 +284,8 @@ def time_tendencies(
     if not sportsOrEvents:
         sportsOrEvents = df[group_column].dropna().unique().tolist()
 
-    # Filtra o DataFrame com base nos esportes/eventos selecionados e remove linhas com valores nulos em 'Year' ou na feature
-    df_filtered = df[df[group_column].isin(sportsOrEvents)].copy()
+  # Filtra o DataFrame com base nos esportes/eventos selecionados e remove linhas com valores nulos em 'Year' ou na feature
+    df_filtered = df[df[group_column].isin(sports_or_events)]
     df_filtered = df_filtered.dropna(subset=['Year', feature])
 
     if df_filtered.empty:
@@ -323,6 +325,6 @@ def time_tendencies(
                     lines[sport_or_event] = value
         if lines:
             response.append({"date": date, "lines": lines})
-
+    print(response)
     return response
 
