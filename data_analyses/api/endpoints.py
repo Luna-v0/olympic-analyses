@@ -250,12 +250,13 @@ def get_sports_distance(
     sorted_distances = sorted(distances, key=lambda x: x["Distance"])
     return sorted_distances
 
-@app.post("/api/timeTendencies")
+@app.get("/api/timeTendencies")
 def time_tendencies(
-    isSportsOrEvents: str = Body(..., description="String with either 'sports' or 'events'"),
-    feature: str = Body(..., description="Feature to analyze over time."),
-    sportsOrEvents: List[str] = Body([], description="List of Sports or Events to analyze."),
+    isSportsOrEvents: str = Query("sports", description="String with either 'sports' or 'events'"),
+    feature: str = Query("Height", description="Feature to analyze over time."),
+    sportsOrEvents: List[str] = Query([], description="List of Sports or Events to analyze."),
 ) -> List[dict]:
+    print(isSportsOrEvents, feature, sportsOrEvents)
     try:
         df = pd.read_csv("../data/athlete_events.csv")
     except FileNotFoundError:
@@ -278,7 +279,7 @@ def time_tendencies(
     if not sports_or_events:
         sports_or_events = df[group_column].dropna().unique().tolist()
 
-    df_filtered = df[df[group_column].isin(sports_or_events)].copy()
+    df_filtered = df[df[group_column].isin(sports_or_events)]
     df_filtered = df_filtered.dropna(subset=['Year', feature])
 
     if df_filtered.empty:
@@ -314,6 +315,6 @@ def time_tendencies(
                     lines[sport_or_event] = value
         if lines:
             response.append({"date": date, "lines": lines})
-
+    print(response)
     return response
 

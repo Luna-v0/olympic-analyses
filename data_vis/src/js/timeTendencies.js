@@ -37,17 +37,25 @@ document
 
 
     const requestData = {
-      isSportsOrEvents: checkBox.checked ? "sport" : "event",
-      feature: getSelectedItem(),
-      sportsOrEvents: getSelectedItems(),
-    };
+  isSportsOrEvents: checkBox.checked ? "events" : "sports",
+  feature: getSelectedItem(),
+  sportsOrEvents: getSelectedItems(),
+};
 
-    try {
-      // Send data to backend
-      const responseData = await apiCall(
-        requestData,
-        "http://localhost:8000/api/timeTendencies"
-      );
+// Construct URL with query parameters
+const baseUrl = "http://localhost:8000/api/timeTendencies";
+const urlWithParams = new URL(baseUrl);
+urlWithParams.searchParams.append("isSportsOrEvents", requestData.isSportsOrEvents);
+urlWithParams.searchParams.append("feature", requestData.feature);
+
+// Assuming sportsOrEvents is an array, append each item
+requestData.sportsOrEvents.forEach((item) => {
+  urlWithParams.searchParams.append("sportsOrEvents", item);
+});
+
+try {
+  console.log("Request URL:", urlWithParams.toString());
+  const responseData = await apiCall("", urlWithParams.toString()); // Empty body since parameters are in the URL
 
       // Use response data for D3 plotting
       createLineChart({
