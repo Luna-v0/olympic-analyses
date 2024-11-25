@@ -80,7 +80,7 @@ def get_features_agg(
     filtered_df = df[df[index_column].isin(names)]
     response = filtered_df.to_dict(orient="records")
 
-    return response
+    return sorted(response)
 
 @app.get("/api/getNames")
 def get_names(
@@ -91,7 +91,7 @@ def get_names(
     df, index_column = get_ic_and_df(agg_level)
     df = filter_for_sex(df, gender)
     if index_column is None: return []
-    return df[index_column].tolist()
+    return sorted(df[index_column].tolist())
 
 
 # Isso pode ser preprocessado bem facilmente, se performance for um problema
@@ -146,7 +146,7 @@ def get_fairest(
     return to_return
 
 @app.get("/api/getSportsToCompareWithUser")
-def generateAvarage(eventOrSport:str, gender:str):
+def generateAverage(eventOrSport:str, gender:str):
     eventOrSport = eventOrSport.lower()
     #if starts with event
     if eventOrSport.startswith("event"):

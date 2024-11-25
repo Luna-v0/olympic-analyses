@@ -3,12 +3,12 @@ import props from "./properties.js";
 import { setUpOptions, setupMultiSelect, setupSingleSelect, setUpModifiableOptions } from "./dropDown";
 import { createLineChart } from "./timeSeries";
 
-const optionsEvent = createDropDictFromList(props.Event);
-const optionsSport = createDropDictFromList(props.Sport);
+const optionsEvent = createDropDictFromList([...props.Event].sort());
+const optionsSport = createDropDictFromList([...props.Sport].sort());
 
 const optionsListForSingleDropDown = createDropDictFromList(
   props.Properties.filter(
-    (item) => !["Event", "Sport", "City","Year"].includes(item)
+    (item) => !["Event", "Sport", "City","Year", "NOC", "Team", "Games", "Medal"].includes(item)
   )
 );
 
