@@ -252,40 +252,47 @@ def get_sports_distance(
 
 @app.post("/api/timeTendencies")
 def time_tendencies(
-    isSportsOrEvents: str = Body(..., description="String with either 'sports' or 'events'"),
-    feature: str = Body(..., description="Feature to analyze over time."),
-    sportsOrEvents: List[str] = Body([], description="List of Sports or Events to analyze."),
+    isSportsOrEvents: str = Body(..., description="String com 'sports' ou 'events'"),
+    feature: str = Body(..., description="Feature a ser analisada ao longo do tempo."),
+    sportsOrEvents: List[str] = Body(..., description="Lista de Esportes ou Eventos a serem analisados."),
 ) -> List[dict]:
     try:
         df = pd.read_csv("../data/athlete_events.csv")
     except FileNotFoundError:
-        return [{"error": "Data file not found."}]
+        return [{"error": "Arquivo de dados não encontrado."}]
     except Exception as e:
-        return [{"error": f"Unexpected error while loading data: {str(e)}"}]
+        return [{"error": f"Erro inesperado ao carregar os dados: {str(e)}"}]
 
-    feature = feature
+    # Normaliza o valor de isSportsOrEvents para minúsculas
     is_sports_or_events = isSportsOrEvents.lower()
-    sports_or_events = sportsOrEvents
 
+    # Determina a coluna de agrupamento com base em isSportsOrEvents
+    if is_sports_or_events.startswith('sport'):
+        group_column = SPORT
+    elif is_sports_or_events.startswith('event'):
+        group_column = EVENT
+    else:
+        return [{"error": "isSportsOrEvents deve ser 'sports' ou 'events'."}]
+
+    # Verifica se a feature existe no DataFrame
     if feature not in df.columns:
-        return [{"error": f"Feature '{feature}' not found in data"}]
+        return [{"error": f"Feature '{feature}' não encontrada nos dados."}]
 
-    if is_sports_or_events not in ['sports', 'events']:
-        return [{"error": "isSportsOrEvents must be either 'sports' or 'events'"}]
+    # Se a lista de sportsOrEvents estiver vazia, seleciona todos os disponíveis
+    if not sportsOrEvents:
+        sportsOrEvents = df[group_column].dropna().unique().tolist()
 
-    group_column = SPORT if is_sports_or_events == 'sports' else EVENT
-
-    if not sports_or_events:
-        sports_or_events = df[group_column].dropna().unique().tolist()
-
-    df_filtered = df[df[group_column].isin(sports_or_events)].copy()
+    # Filtra o DataFrame com base nos esportes/eventos selecionados e remove linhas com valores nulos em 'Year' ou na feature
+    df_filtered = df[df[group_column].isin(sportsOrEvents)].copy()
     df_filtered = df_filtered.dropna(subset=['Year', feature])
 
     if df_filtered.empty:
-        return [{"error": "No data available for the given filters."}]
+        return [{"error": "Nenhum dado disponível para os filtros fornecidos."}]
 
+    # Converte a coluna 'Year' para string
     df_filtered['Year'] = df_filtered['Year'].astype(int).astype(str)
 
+    # Agrupa os dados por 'Year' e pela coluna de agrupamento, calculando a média para features numéricas ou a moda para não numéricas
     if pd.api.types.is_numeric_dtype(df_filtered[feature]):
         df_grouped = df_filtered.groupby(['Year', group_column])[feature].mean().reset_index()
     else:
@@ -294,20 +301,22 @@ def time_tendencies(
         ).reset_index()
 
     if df_grouped.empty:
-        return [{"error": "No data after grouping and analysis."}]
+        return [{"error": "Nenhum dado após o agrupamento e análise."}]
 
+    # Transforma os dados agrupados em um formato pivot para facilitar a criação de séries temporais
     df_pivot = df_grouped.pivot(index='Year', columns=group_column, values=feature)
 
     if df_pivot.empty:
-        return [{"error": "No data after pivot transformation."}]
+        return [{"error": "Nenhum dado após a transformação pivot."}]
 
     df_pivot.reset_index(inplace=True)
 
+    # Prepara a resposta no formato esperado pelo frontend
     response = []
     for _, row in df_pivot.iterrows():
         date = row['Year']
         lines = {}
-        for sport_or_event in sports_or_events:
+        for sport_or_event in sportsOrEvents:
             if sport_or_event in df_pivot.columns:
                 value = row.get(sport_or_event)
                 if pd.notnull(value):
