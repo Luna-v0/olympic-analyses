@@ -25,12 +25,22 @@ const toogleCheckboxId = "toggleCheckbox";
 //const displaySingleContainerId = "selectedItemContainer1";
 const radioGroupId = "sexCategory";
 
+const { getSelectedItem: getCountry } = setupSingleSelect(
+  dropDownContainerId,
+  displaySingleContainerId
+);
+
+const { getSelectedItem: getSex } = setupSingleSelect(
+  dropDownContainerId2,
+  displaySingleContainerId2
+);
+
 const { getSelectedItems, removeAllSelectedItems } = setupMultiSelect(
   multiDropDownId,
   displayMultiContainerId
 );
 
-//setUpOptions(dropDownContainerId, optionsListForSingleDropDown);
+setUpOptions(dropDownContainerId, options);
 setUpModifiableOptions(
   toogleCheckboxId,
   multiDropDownId,
@@ -69,7 +79,7 @@ document
     }
 
     const requestData = {
-      agg_level: checkBox.checked ? "event" : "sport",
+      agg_level: checkBox.checked ? "Event" : "Sport",
       sex: selectedSexCategory/*.toString()*/,
       features: getSelectedItems()/*.toString()*/,
     };
@@ -83,7 +93,7 @@ document
 
       // Usar a resposta para plotar com D3
 
-      
+      console.log(responseData)
       createLineChart({
         selector: "#timeSeries",
         data: responseData,
@@ -93,5 +103,5 @@ document
       console.error("Error fetching data:", error);
       alert("An error occurred. Please try again.");
     }
-    
+
   });

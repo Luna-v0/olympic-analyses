@@ -225,10 +225,11 @@ def get_sports_for_user(
 
 @app.get("/api/getSportsDistance")
 def get_sports_distance(
-        agg_level: str = Query(..., description="Aggregation level for sports distances."),
+        agg_level: str = Query('Sport' , description="Aggregation level for sports distances."),
         sex: str = Query(ANY, description="Gender"),
-        features: List[str] = Query(..., description="List of features to calculate distances.")
+        features: List[str] = Query(['Height', 'BMI', 'Age', 'GDP'], description="List of features to calculate distances.")
 ) -> List[dict]:
+    print(agg_level, sex, features)
     df, index_column = get_ic_and_df(agg_level)
     df = filter_for_sex(df, sex)
     scaler = StandardScaler()
