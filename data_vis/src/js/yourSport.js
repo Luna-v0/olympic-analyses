@@ -60,14 +60,15 @@ document
       userData.GDP = user_gdp;
 
       const alpha = 5;
-      const maxDistance = Math.max(...responseTableData.map((row) => row.Distance));
-      const minDistance = Math.min(...responseTableData.map((row) => row.Distance));
+      const minDistance = Math.max(...responseTableData.map((row) => row.Distance));
+      const maxDistance = Math.min(...responseTableData.map((row) => row.Distance));
+      const meanDistance = responseTableData.reduce((acc, row) => acc + row.Distance, 0) / responseTableData.length;
       responseTableData.forEach((row) => {
         responseChartData.forEach((sport) => {
           console.log(row.Sport, sport.Sport);
           if (row.Sport === sport.Sport) {
-            const normalized = (row.Distance - minDistance) / (maxDistance - minDistance);
-            sport.opacity = (Math.exp(alpha * normalized) - 1) / (Math.exp(alpha) - 1)
+            const normalized = (row.Distance - meanDistance) / (maxDistance - minDistance);
+            sport.opacity = normalized*alpha;
           }
         });
       });
