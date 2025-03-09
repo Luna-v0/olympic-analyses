@@ -285,7 +285,7 @@ def time_tendencies(
         sportsOrEvents = df[group_column].dropna().unique().tolist()
 
   # Filtra o DataFrame com base nos esportes/eventos selecionados e remove linhas com valores nulos em 'Year' ou na feature
-    df_filtered = df[df[group_column].isin(sports_or_events)]
+    df_filtered = df[df[group_column].isin(sportsOrEvents)]
     df_filtered = df_filtered.dropna(subset=['Year', feature])
 
     if df_filtered.empty:
