@@ -15,15 +15,19 @@ const displaySingleContainerId2 = "selectedItemContainer2";
 setUpOptions(dropDownContainerId, options);
 setUpOptions(dropDownContainerId2, sexOptions);
 
-const { getSelectedItem: getCountry } = setupSingleSelect(
+const { getSelectedItem: getCountry, setSelectedItem: setCountry } = setupSingleSelect(
   dropDownContainerId,
-  displaySingleContainerId
+  displaySingleContainerId,
 );
 
-const { getSelectedItem: getSex } = setupSingleSelect(
+setCountry(options[0].label)
+
+const { getSelectedItem: getSex, setSelectedItem: setSex } = setupSingleSelect(
   dropDownContainerId2,
   displaySingleContainerId2
 );
+
+setSex(sexOptions[0].label)
 
 document
   .getElementById("dataForm")

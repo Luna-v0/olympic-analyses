@@ -63,6 +63,7 @@ export function setupMultiSelect(dropdownId, displayContainerId) {
   return {
     getSelectedItems: () => Array.from(selectedItems), // Return selected items as an array
     removeAllSelectedItems: () => removeAllSelectedItems(),
+    addSelectedItem: (item) => addSelectedItem(item)
   };
 }
 
@@ -149,5 +150,6 @@ export function setupSingleSelect(dropdownId, displayContainerId) {
   return {
     getSelectedItem: () => selectedItem,
     removeSelectedItem: () => removeSelectedItem(),
+    setSelectedItem: (item) => setSelectedItem(item)
   };
 }
